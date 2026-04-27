@@ -1,0 +1,409 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────
+
+enum Role {
+  STUDENT
+  TEACHER
+  PARENT
+  COUNSELOR
+}
+
+enum MoodState {
+  GOOD
+  CALM
+  STRESSED
+  LOW
+  ANXIOUS
+  NUMB
+  TIRED
+  UNKNOWN
+}
+
+enum MoodTrend {
+  IMPROVING
+  STABLE
+  DECLINING
+}
+
+enum StudyMethod {
+  POMODORO
+  FEYNMAN
+  SPACED_REPETITION
+}
+
+enum TherapyMode {
+  GROUNDING
+  RELEASE
+  SOCIAL
+  EYE_GAME
+  FOCUS
+}
+
+enum HeatLevel {
+  EMPTY
+  LOW
+  MID
+  HIGH
+  PEAK
+}
+
+enum EscalationStatus {
+  NONE
+  MONITORING
+  WARM_REFERRAL
+  COUNSELOR_CONNECTED
+}
+
+// ─────────────────────────────────────────
+// USER & AUTH
+// ─────────────────────────────────────────
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String
+  role          Role     @default(STUDENT)
+  language      String   @default("en") // "ko" | "id" | "en"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations by role
+  student       Student?
+  teacher       Teacher?
+  parent        Parent?
+  counselor     Counselor?
+}
+
+model Student {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Nunchi onboarding baseline
+  onboardingDone     Boolean  @default(false)
+  culturalBaseline   Json?    // result of Nunchi Test scenario answers
+
+  // Escalation
+  escalationStatus   EscalationStatus @default(NONE)
+  escalationNote     String?
+
+  // Aggregated profile (updated by background job, not raw)
+  nuriProfileScore   Float?   // gap between "Reading Others" vs "Expressing Self"
+  readingScore       Float?
+  expressionScore    Float?
+
+  // Relations
+  moodCheckIns       MoodCheckIn[]
+  studySessions      StudySession[]
+  healthBreaks       HealthBreak[]
+  ventEntries        VentEntry[]
+  therapySessions    TherapySession[]
+  heatmapEntries     HeatmapEntry[]
+  weeklyReports      WeeklyReport[]
+  examSchedules      ExamSchedule[]
+  flags              StudentFlag[]
+
+  classEnrollments   ClassEnrollment[]
+  parentLinks        ParentStudent[]
+  counselorLinks     CounselorStudent[]
+}
+
+model Teacher {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school    String?
+  classes   Class[]
+}
+
+model Parent {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  children  ParentStudent[]
+}
+
+model Counselor {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school    String?
+  students  CounselorStudent[]
+}
+
+// Junction tables
+model ParentStudent {
+  parentId  String
+  studentId String
+  parent    Parent  @relation(fields: [parentId], references: [id])
+  student   Student @relation(fields: [studentId], references: [id])
+
+  @@id([parentId, studentId])
+}
+
+model CounselorStudent {
+  counselorId String
+  studentId   String
+  linkedAt    DateTime @default(now())
+  counselor   Counselor @relation(fields: [counselorId], references: [id])
+  student     Student   @relation(fields: [studentId], references: [id])
+
+  @@id([counselorId, studentId])
+}
+
+// ─────────────────────────────────────────
+// CLASS & SEATING (F8)
+// ─────────────────────────────────────────
+
+model Class {
+  id          String   @id @default(cuid())
+  name        String   // e.g. "2-A"
+  teacherId   String
+  teacher     Teacher  @relation(fields: [teacherId], references: [id])
+  createdAt   DateTime @default(now())
+
+  enrollments ClassEnrollment[]
+  moodMaps    ClassMoodSnapshot[]
+}
+
+model ClassEnrollment {
+  classId   String
+  studentId String
+  seatRow   Int      // for seating layout
+  seatCol   Int
+  class     Class   @relation(fields: [classId], references: [id])
+  student   Student @relation(fields: [studentId], references: [id])
+
+  @@id([classId, studentId])
+}
+
+// Snapshot of class mood at a point in time (for dashboard history)
+model ClassMoodSnapshot {
+  id          String   @id @default(cuid())
+  classId     String
+  class       Class    @relation(fields: [classId], references: [id])
+  takenAt     DateTime @default(now())
+  moodCounts  Json     // { GOOD: 5, CALM: 10, STRESSED: 3, ... }
+}
+
+// ─────────────────────────────────────────
+// F1 + F2: MOOD CHECK-IN
+// ─────────────────────────────────────────
+
+model MoodCheckIn {
+  id              String    @id @default(cuid())
+  studentId       String
+  student         Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  mood            MoodState
+  cvDetected      MoodState? // mood from computer vision (may differ from self-report)
+  cameraUsed      Boolean   @default(false)
+
+  // Adaptive question answers (stored as ordered JSON array)
+  questionAnswers Json?     // [{ question: string, answer: string }]
+  skipped         Boolean   @default(false)
+
+  // Passive signals
+  sessionStartHour Int?     // 0–23, for detecting 2AM sessions
+  studyMethodRec  StudyMethod? // Nuri's recommendation output
+
+  createdAt       DateTime  @default(now())
+
+  @@index([studentId, createdAt])
+}
+
+// ─────────────────────────────────────────
+// F3: STUDY SESSION (AI Recommendation Engine)
+// ─────────────────────────────────────────
+
+model StudySession {
+  id            String      @id @default(cuid())
+  studentId     String
+  student       Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  method        StudyMethod
+  subject       String?
+  plannedMins   Int
+  actualMins    Int?        // null until session ends
+  breaksTaken   Int         @default(0)
+  completed     Boolean     @default(false)
+
+  moodAtStart   MoodState?
+  moodAtEnd     MoodState?
+
+  startedAt     DateTime    @default(now())
+  endedAt       DateTime?
+
+  examScheduleId String?
+  examSchedule  ExamSchedule? @relation(fields: [examScheduleId], references: [id])
+
+  @@index([studentId, startedAt])
+}
+
+// ─────────────────────────────────────────
+// F3: EXAM SCHEDULE PLANNER
+// ─────────────────────────────────────────
+
+model ExamSchedule {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  subject     String
+  examDate    DateTime
+  createdAt   DateTime @default(now())
+
+  // Auto-distributed study slots (JSON array of { date, method, durationMins })
+  studySlots  Json?
+
+  studySessions StudySession[]
+}
+
+// ─────────────────────────────────────────
+// F4: DIGITAL HEALTH BREAKS
+// ─────────────────────────────────────────
+
+enum BreakType {
+  EYE_GYMNASTICS
+  MICRO_STRETCH
+  POSTURE_CHECK
+}
+
+model HealthBreak {
+  id          String    @id @default(cuid())
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  breakType   BreakType
+  durationSec Int?      // how long they actually stayed
+  completed   Boolean   @default(false)
+  triggeredBy String?   // "auto_40min" | "nuri_suggestion" | "manual"
+
+  createdAt   DateTime  @default(now())
+
+  @@index([studentId, createdAt])
+}
+
+// ─────────────────────────────────────────
+// F5: THERAPY SESSION (Soundscape + Game)
+// ─────────────────────────────────────────
+
+model TherapySession {
+  id             String      @id @default(cuid())
+  studentId      String
+  student        Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  mode           TherapyMode
+  durationSec    Int?
+  binauralFreqHz Float?      // e.g. 10.0 for alpha
+  moodBefore     MoodState?
+  moodAfter      MoodState?
+
+  // No progress saved per proposal — but we do store aggregate metadata
+  enteredVia     String?     // "nuri_suggestion" | "manual" | "detected_need"
+
+  createdAt      DateTime    @default(now())
+
+  @@index([studentId, createdAt])
+}
+
+// ─────────────────────────────────────────
+// F6: PRIVATE VENT SPACE
+// ─────────────────────────────────────────
+
+model VentEntry {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  // Content stored encrypted — never shown to anyone
+  contentHash String?  // AES-256 encrypted content (client encrypts before send)
+
+  // AI reads patterns only — these are derived signals, not raw content
+  sentimentScore    Float?   // –1.0 to 1.0
+  emotionalCategory String?  // e.g. "academic_pressure", "social_tension"
+  flagForReview     Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+
+  @@index([studentId, createdAt])
+}
+
+// ─────────────────────────────────────────
+// F7: HEATMAP & WEEKLY REPORT
+// ─────────────────────────────────────────
+
+// One row per student per hour per day
+model HeatmapEntry {
+  id          String    @id @default(cuid())
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  dayOfWeek   Int       // 0 = Mon … 6 = Sun
+  hour        Int       // 0–23
+  weekStart   DateTime  // Monday 00:00 of that ISO week
+  level       HeatLevel
+
+  @@unique([studentId, weekStart, dayOfWeek, hour])
+  @@index([studentId, weekStart])
+}
+
+model WeeklyReport {
+  id               String   @id @default(cuid())
+  studentId        String
+  student          Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  weekStart        DateTime // Monday 00:00
+  studyHours       Float
+  wellnessScore    Float    // 0–100
+  avgMood          MoodState
+  avgSleepHours    Float?
+  avgActivityMins  Float?
+  ventSessionCount Int      @default(0)
+  breaksTaken      Int      @default(0)
+
+  // AI-generated one-sentence insight (Nuri)
+  nuriInsight      String?
+
+  // Three highlight moments
+  highlights       Json?    // [{ day, text, icon }]
+
+  // Parent-friendly version flag
+  parentVersion    Boolean  @default(false)
+
+  createdAt        DateTime @default(now())
+
+  @@unique([studentId, weekStart])
+  @@index([studentId, weekStart])
+}
+
+// ─────────────────────────────────────────
+// F8: TEACHER FLAGS & MONITORING
+// ─────────────────────────────────────────
+
+model StudentFlag {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  reason      String   // e.g. "sustained_low_expression_openness"
+  severity    Int      @default(1) // 1–3
+  resolvedAt  DateTime?
+  resolvedBy  String?  // counselor/teacher userId
+
+  createdAt   DateTime @default(now())
+
+  @@index([studentId, createdAt])
+}

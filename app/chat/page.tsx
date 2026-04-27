@@ -178,7 +178,7 @@ export default function ChatPage() {
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-sand-100 bg-white/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="flex items-center gap-3">
-          <Link href="/" className="text-sand-400 hover:text-sand-600 text-sm">←</Link>
+          <div className="w-8" />
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-nunchi-400 to-nunchi-600 flex items-center justify-center text-white text-lg shadow-sm">
             🌙
           </div>

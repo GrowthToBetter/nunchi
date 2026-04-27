@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import BottomNav from "./components/BottomNav";
 
 export const metadata: Metadata = {
   title: "Nunchi (눈치) — Feel What's Not Said",
   description:
-    "An AI-powered mental wellness companion bridging Korean and Indonesian cultural intelligence. For the 16th e-ICON World Contest, SDG 3.",
+    "An AI-powered mental wellness companion bridging Korean and Indonesian cultural intelligence.",
 };
 
 export default function RootLayout({
@@ -15,7 +16,10 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className="min-h-screen bg-[#fafaf8] antialiased">
-        {children}
+        <div className="pb-20">
+          {children}
+        </div>
+        <BottomNav />
       </body>
     </html>
   );

@@ -48,7 +48,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-[#fafaf8] flex flex-col">
       <header className="flex items-center justify-between px-4 py-4 border-b border-sand-100 bg-white/80 backdrop-blur-sm sticky top-0 z-40">
-        <Link href="/" className="text-sand-400 hover:text-sand-600 text-sm">←</Link>
+        <div className="w-8" />
         <h1 className="font-bold text-[#1a1a2e]">Nunchi Profile</h1>
         <div className="w-8" />
       </header>

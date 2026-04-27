@@ -68,11 +68,14 @@ const MODES: {
 ];
 
 export default function TherapyPage() {
-  const [selectedMode, setSelectedMode] = useState<GameMode | null>(null);
+  const [selectedMode, setSelectedMode] = useState<GameMode>("grounding");
   const [active, setActive] = useState(false);
-  const [breathPhase, setBreathPhase] = useState<"inhale" | "hold" | "exhale">("inhale");
+  const [breathPhase, setBreathPhase] = useState<"inhale" | "hold" | "exhale">(
+    "inhale",
+  );
   const [breathCount, setBreathCount] = useState(0);
   const [sessionTime, setSessionTime] = useState(0);
+  const [autoStarted, setAutoStarted] = useState(false); // ← NEW
   const [drawMode, setDrawMode] = useState(false);
   const [storyStep, setStoryStep] = useState(0);
   const [audioOn, setAudioOn] = useState(false);
@@ -117,6 +120,15 @@ export default function TherapyPage() {
       // Web Audio not available
     }
   }, [mode]);
+  useEffect(() => {
+    if (!autoStarted) {
+      setAutoStarted(true);
+      // Delay sedikit biar browser siap
+      setTimeout(() => {
+        setActive(true);
+      }, 600);
+    }
+  }, [autoStarted]);
 
   const stopAudio = () => {
     if (audioCtxRef.current) {
@@ -144,14 +156,21 @@ export default function TherapyPage() {
       }, CYCLE[idx].duration);
     };
     next();
-    return () => { if (breathTimerRef.current) clearTimeout(breathTimerRef.current); };
+    return () => {
+      if (breathTimerRef.current) clearTimeout(breathTimerRef.current);
+    };
   }, [active, selectedMode]);
 
   // Session timer
   useEffect(() => {
     if (!active) return;
-    sessionTimerRef.current = setInterval(() => setSessionTime((t) => t + 1), 1000);
-    return () => { if (sessionTimerRef.current) clearInterval(sessionTimerRef.current); };
+    sessionTimerRef.current = setInterval(
+      () => setSessionTime((t) => t + 1),
+      1000,
+    );
+    return () => {
+      if (sessionTimerRef.current) clearInterval(sessionTimerRef.current);
+    };
   }, [active]);
 
   const startSession = () => {
@@ -174,10 +193,17 @@ export default function TherapyPage() {
     }
   };
 
-  const formatTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
+  const formatTime = (s: number) =>
+    `${Math.floor(s / 60)
+      .toString()
+      .padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
 
   // Canvas drawing for release mode
-  const startDraw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+  const startDraw = (
+    e:
+      | React.MouseEvent<HTMLCanvasElement>
+      | React.TouchEvent<HTMLCanvasElement>,
+  ) => {
     isDrawing.current = true;
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -190,7 +216,11 @@ export default function TherapyPage() {
     ctx.moveTo(clientX - rect.left, clientY - rect.top);
   };
 
-  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+  const draw = (
+    e:
+      | React.MouseEvent<HTMLCanvasElement>
+      | React.TouchEvent<HTMLCanvasElement>,
+  ) => {
     if (!isDrawing.current) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -206,7 +236,9 @@ export default function TherapyPage() {
     ctx.stroke();
   };
 
-  const endDraw = () => { isDrawing.current = false; };
+  const endDraw = () => {
+    isDrawing.current = false;
+  };
 
   const STORIES = [
     "There was once a student who felt they were falling behind — not just in exams, but in life itself.",
@@ -216,91 +248,98 @@ export default function TherapyPage() {
     "The exam results came. Some were what they hoped. Some weren't. But the student had changed how they kept score.",
   ];
 
-  if (!selectedMode) {
-    return (
-      <div className="min-h-screen bg-[#fafaf8] flex flex-col">
-        <header className="flex items-center gap-3 px-4 py-4 border-b border-sand-100 bg-white/80 backdrop-blur-sm">
-          <Link href="/" className="text-sand-400 hover:text-sand-600 text-sm">←</Link>
-          <div>
-            <h1 className="font-bold text-[#1a1a2e] text-base">Therapy Space</h1>
-            <p className="text-xs text-sand-400">Sound + visual therapy · 5–15 minutes</p>
-          </div>
-        </header>
-
-        <div className="px-6 py-8 max-w-2xl mx-auto w-full">
-          <p className="text-sand-500 text-sm mb-6 text-center">
-            Each mode is grounded in psychological theory — selected based on how you feel right now. Choose what resonates.
-          </p>
-          <div className="grid grid-cols-1 gap-3">
-            {MODES.map((m) => (
-              <button
-                key={m.id}
-                onClick={() => setSelectedMode(m.id)}
-                className="flex items-start gap-4 p-5 rounded-2xl border-2 border-sand-100 bg-white text-left card-hover transition-all hover:border-nunchi-200"
-                style={{ "--hover-bg": m.color } as React.CSSProperties}
-              >
-                <span className="text-3xl flex-shrink-0">{m.emoji}</span>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold text-[#1a1a2e] text-sm">{m.label}</span>
-                    <span className="text-xs text-sand-400 border border-sand-200 rounded-full px-2 py-0.5">
-                      {m.freq}Hz
-                    </span>
-                  </div>
-                  <p className="text-xs text-sand-500 leading-relaxed">{m.desc}</p>
-                  <p className="text-xs text-sand-400 mt-1 italic">{m.theory}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: mode?.color }}>
-      {/* Header */}
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ backgroundColor: mode?.color }}>
+      {/* Mode tabs — ganti mode picker lama */}
       <header className="flex items-center justify-between px-4 py-3 bg-white/30 backdrop-blur-sm">
         <button
-          onClick={() => { endSession(); setSelectedMode(null); }}
-          className="text-sm font-medium"
-          style={{ color: mode?.textColor }}
-        >
-          ← Exit
+          onClick={() => {
+            endSession();
+          }}
+          className="text-sm font-medium opacity-60 hover:opacity-100"
+          style={{ color: mode?.textColor }}>
+          End
         </button>
         <div className="text-center">
           <p className="text-sm font-bold" style={{ color: mode?.textColor }}>
-            {mode?.emoji} {mode?.label} Mode
+            {mode?.emoji} {mode?.label}
           </p>
-          {active && <p className="text-xs opacity-60" style={{ color: mode?.textColor }}>{formatTime(sessionTime)}</p>}
+          {active && (
+            <p
+              className="text-xs opacity-50"
+              style={{ color: mode?.textColor }}>
+              {formatTime(sessionTime)}
+            </p>
+          )}
         </div>
         <button
           onClick={audioOn ? stopAudio : startAudio}
-          className="text-xs border rounded-full px-3 py-1"
-          style={{ borderColor: mode?.textColor, color: mode?.textColor }}
-        >
-          {audioOn ? "🔊 Sound" : "🔇 Muted"}
+          className="text-xs border rounded-full px-3 py-1 opacity-60 hover:opacity-100"
+          style={{ borderColor: mode?.textColor, color: mode?.textColor }}>
+          {audioOn ? "🔊" : "🔇"}
         </button>
       </header>
+
+      {/* Mode tab strip — gantikan mode picker lama */}
+      <div
+        className="flex gap-2 px-4 py-2.5 overflow-x-auto"
+        style={{
+          background: "rgba(255,255,255,0.2)",
+          borderBottom: "1px solid rgba(255,255,255,0.3)",
+          scrollbarWidth: "none",
+        }}>
+        {MODES.map((m) => (
+          <button
+            key={m.id}
+            onClick={() => {
+              if (active) endSession();
+              setSelectedMode(m.id);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all"
+            style={{
+              background:
+                selectedMode === m.id
+                  ? mode?.textColor
+                  : "rgba(255,255,255,0.35)",
+              color: selectedMode === m.id ? mode?.color : mode?.textColor,
+            }}>
+            {m.emoji} {m.label}
+          </button>
+        ))}
+      </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 pb-8">
         {!active ? (
           <div className="text-center max-w-sm">
             <div className="text-6xl mb-6">{mode?.emoji}</div>
-            <h2 className="text-2xl font-bold mb-3" style={{ color: mode?.textColor }}>{mode?.label}</h2>
-            <p className="text-sm mb-2 opacity-70" style={{ color: mode?.textColor }}>{mode?.desc}</p>
-            <p className="text-xs mb-8 italic opacity-50" style={{ color: mode?.textColor }}>{mode?.theory}</p>
+            <h2
+              className="text-2xl font-bold mb-3"
+              style={{ color: mode?.textColor }}>
+              {mode?.label}
+            </h2>
+            <p
+              className="text-sm mb-2 opacity-70"
+              style={{ color: mode?.textColor }}>
+              {mode?.desc}
+            </p>
+            <p
+              className="text-xs mb-8 italic opacity-50"
+              style={{ color: mode?.textColor }}>
+              {mode?.theory}
+            </p>
             {audioOn !== false && (
-              <p className="text-xs mb-4 opacity-50" style={{ color: mode?.textColor }}>
+              <p
+                className="text-xs mb-4 opacity-50"
+                style={{ color: mode?.textColor }}>
                 🎧 Use headphones for binaural beat effect ({mode?.freq}Hz)
               </p>
             )}
             <button
               onClick={startSession}
               className="px-8 py-4 rounded-2xl font-semibold text-white shadow-lg"
-              style={{ backgroundColor: mode?.textColor }}
-            >
+              style={{ backgroundColor: mode?.textColor }}>
               Begin Session
             </button>
           </div>
@@ -313,20 +352,32 @@ export default function TherapyPage() {
                   className="w-48 h-48 rounded-full border-4 flex items-center justify-center transition-all duration-1000"
                   style={{
                     borderColor: mode?.textColor,
-                    transform: breathPhase === "inhale" ? "scale(1.3)" : breathPhase === "hold" ? "scale(1.3)" : "scale(0.85)",
+                    transform:
+                      breathPhase === "inhale"
+                        ? "scale(1.3)"
+                        : breathPhase === "hold"
+                          ? "scale(1.3)"
+                          : "scale(0.85)",
                     opacity: breathPhase === "hold" ? 0.9 : 0.7,
                     backgroundColor: mode?.color,
-                  }}
-                >
-                  <p className="text-center font-medium capitalize text-sm" style={{ color: mode?.textColor }}>
+                  }}>
+                  <p
+                    className="text-center font-medium capitalize text-sm"
+                    style={{ color: mode?.textColor }}>
                     {breathPhase}
                     <br />
                     <span className="text-xs opacity-60">
-                      {breathPhase === "inhale" ? "4s" : breathPhase === "hold" ? "2s" : "6s"}
+                      {breathPhase === "inhale"
+                        ? "4s"
+                        : breathPhase === "hold"
+                          ? "2s"
+                          : "6s"}
                     </span>
                   </p>
                 </div>
-                <p className="text-sm opacity-60" style={{ color: mode?.textColor }}>
+                <p
+                  className="text-sm opacity-60"
+                  style={{ color: mode?.textColor }}>
                   {breathCount} breath cycles · Let your body lead
                 </p>
               </div>
@@ -336,17 +387,22 @@ export default function TherapyPage() {
             {selectedMode === "storytelling" && (
               <div className="max-w-md text-center">
                 <div className="bg-white/60 rounded-3xl p-8 mb-6">
-                  <p className="text-lg leading-relaxed font-light" style={{ color: mode?.textColor }}>
+                  <p
+                    className="text-lg leading-relaxed font-light"
+                    style={{ color: mode?.textColor }}>
                     {STORIES[storyStep]}
                   </p>
                 </div>
                 <button
-                  onClick={() => setStoryStep((s) => Math.min(s + 1, STORIES.length - 1))}
+                  onClick={() =>
+                    setStoryStep((s) => Math.min(s + 1, STORIES.length - 1))
+                  }
                   disabled={storyStep >= STORIES.length - 1}
                   className="text-sm font-medium opacity-70 hover:opacity-100 disabled:opacity-30"
-                  style={{ color: mode?.textColor }}
-                >
-                  {storyStep < STORIES.length - 1 ? "Continue the story →" : "The story continues in you."}
+                  style={{ color: mode?.textColor }}>
+                  {storyStep < STORIES.length - 1
+                    ? "Continue the story →"
+                    : "The story continues in you."}
                 </button>
               </div>
             )}
@@ -357,19 +413,37 @@ export default function TherapyPage() {
                 <div className="relative w-64 h-40">
                   <div
                     className="absolute w-24 h-24 rounded-full border-2 animate-float"
-                    style={{ borderColor: mode?.textColor, left: "10%", top: "20%", animationDelay: "0s" }}
+                    style={{
+                      borderColor: mode?.textColor,
+                      left: "10%",
+                      top: "20%",
+                      animationDelay: "0s",
+                    }}
                   />
                   <div
                     className="absolute w-20 h-20 rounded-full border-2 animate-float"
-                    style={{ borderColor: mode?.textColor, right: "10%", top: "30%", animationDelay: "1.5s" }}
+                    style={{
+                      borderColor: mode?.textColor,
+                      right: "10%",
+                      top: "30%",
+                      animationDelay: "1.5s",
+                    }}
                   />
                 </div>
                 <div className="text-center">
-                  <p className="font-semibold" style={{ color: mode?.textColor }}>같이 있어줌</p>
-                  <p className="text-xs mt-1 opacity-60" style={{ color: mode?.textColor }}>
+                  <p
+                    className="font-semibold"
+                    style={{ color: mode?.textColor }}>
+                    같이 있어줌
+                  </p>
+                  <p
+                    className="text-xs mt-1 opacity-60"
+                    style={{ color: mode?.textColor }}>
                     Being present together · Someone else is here right now
                   </p>
-                  <p className="text-xs mt-3 opacity-40" style={{ color: mode?.textColor }}>
+                  <p
+                    className="text-xs mt-3 opacity-40"
+                    style={{ color: mode?.textColor }}>
                     Same soundscape · No words needed
                   </p>
                 </div>
@@ -379,7 +453,9 @@ export default function TherapyPage() {
             {/* Release Mode */}
             {selectedMode === "release" && (
               <div className="flex flex-col items-center gap-4 w-full max-w-md">
-                <p className="text-sm opacity-60 text-center" style={{ color: mode?.textColor }}>
+                <p
+                  className="text-sm opacity-60 text-center"
+                  style={{ color: mode?.textColor }}>
                   Draw something for someone else. It won&apos;t be saved.
                 </p>
                 <canvas
@@ -405,8 +481,7 @@ export default function TherapyPage() {
                     }
                   }}
                   className="text-xs opacity-50 hover:opacity-80"
-                  style={{ color: mode?.textColor }}
-                >
+                  style={{ color: mode?.textColor }}>
                   Clear & start again
                 </button>
               </div>
@@ -420,13 +495,18 @@ export default function TherapyPage() {
                     <div
                       key={i}
                       className="w-16 h-16 rounded-xl bg-white/50 flex items-center justify-center text-2xl cursor-pointer hover:bg-white/80 transition-all"
-                      style={{ animationDelay: `${i * 0.1}s` }}
-                    >
-                      {["🌱", "🌿", "🍃", "🌾", "🌺", "🌸", "🌼", "🌻", "✨"][i]}
+                      style={{ animationDelay: `${i * 0.1}s` }}>
+                      {
+                        ["🌱", "🌿", "🍃", "🌾", "🌺", "🌸", "🌼", "🌻", "✨"][
+                          i
+                        ]
+                      }
                     </div>
                   ))}
                 </div>
-                <p className="text-sm opacity-60 text-center" style={{ color: mode?.textColor }}>
+                <p
+                  className="text-sm opacity-60 text-center"
+                  style={{ color: mode?.textColor }}>
                   Gentle focus · You&apos;re doing well
                 </p>
               </div>
@@ -436,8 +516,7 @@ export default function TherapyPage() {
             <button
               onClick={endSession}
               className="mt-8 text-sm opacity-50 hover:opacity-80 underline"
-              style={{ color: mode?.textColor }}
-            >
+              style={{ color: mode?.textColor }}>
               End session
             </button>
           </>
