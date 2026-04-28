@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import MagicRings from "@/components/MagicRings";
 
 export default function Home() {
   const [isReturning, setIsReturning] = useState(false);
@@ -26,8 +27,34 @@ function FirstVisitHome() {
   return (
     <main
       className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden px-6"
-      style={{ background: "var(--bg-primary)" }}
-    >
+      style={{ background: "var(--bg-primary)" }}>
+      {/* MagicRings — full screen background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <MagicRings
+          color="#70AEFF"
+          colorTwo="#075FAB"
+          ringCount={6}
+          speed={1}
+          attenuation={10}
+          lineThickness={2}
+          baseRadius={0.35}
+          radiusStep={0.1}
+          scaleRate={0.1}
+          opacity={1}
+          blur={0}
+          noiseAmount={0.1}
+          rotation={0}
+          ringGap={1.7}
+          fadeIn={0.7}
+          fadeOut={0.5}
+          followMouse={false}
+          mouseInfluence={0.2}
+          hoverScale={1.2}
+          parallax={0.05}
+          clickBurst={false}
+        />
+      </div>
+
       {/* Ambient — tidak bergerak, tidak menuntut */}
       <div className="fixed inset-0 pointer-events-none">
         <div
@@ -38,7 +65,8 @@ function FirstVisitHome() {
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -60%)",
-            background: "radial-gradient(circle, rgba(90,112,243,0.07) 0%, transparent 70%)",
+            background:
+              "radial-gradient(circle, rgba(90,112,243,0.07) 0%, transparent 70%)",
           }}
         />
         <div
@@ -48,7 +76,8 @@ function FirstVisitHome() {
             height: 400,
             bottom: "-5%",
             right: "-5%",
-            background: "radial-gradient(circle, rgba(255,138,42,0.05) 0%, transparent 70%)",
+            background:
+              "radial-gradient(circle, rgba(255,138,42,0.05) 0%, transparent 70%)",
             animationDelay: "3s",
           }}
         />
@@ -56,20 +85,21 @@ function FirstVisitHome() {
 
       <div
         className="relative z-10 flex flex-col items-center text-center nuri-message"
-        style={{ maxWidth: 380 }}
-      >
+        style={{ maxWidth: 380 }}>
         {/* Wordmark */}
         <div className="mb-12">
           <h1
             className="font-bold mb-1"
-            style={{ fontSize: 72, lineHeight: 1, color: "var(--accent-blue)" }}
-          >
+            style={{
+              fontSize: 72,
+              lineHeight: 1,
+              color: "var(--accent-blue)",
+            }}>
             눈치
           </h1>
           <p
             className="text-xs tracking-[0.25em] uppercase"
-            style={{ color: "var(--text-secondary)" }}
-          >
+            style={{ color: "var(--text-secondary)" }}>
             nunchi
           </p>
         </div>
@@ -77,8 +107,7 @@ function FirstVisitHome() {
         {/* Tagline — singkat */}
         <p
           className="text-lg font-light mb-14 leading-relaxed"
-          style={{ color: "var(--text-secondary)" }}
-        >
+          style={{ color: "var(--text-secondary)" }}>
           Feel what&apos;s not said.
         </p>
 
@@ -91,11 +120,9 @@ function FirstVisitHome() {
             style={{
               background: "linear-gradient(135deg, #5a70f3, #7c96f8)",
               boxShadow: "0 8px 24px rgba(90,112,243,0.2)",
-            }}
-          >
+            }}>
             Just feel it
           </Link>
-
           <Link
             href="/about"
             onClick={markVisited}
@@ -104,16 +131,14 @@ function FirstVisitHome() {
               borderColor: "var(--border)",
               color: "var(--text-secondary)",
               background: "white",
-            }}
-          >
+            }}>
             Show me how it works
           </Link>
         </div>
 
         <p
           className="mt-8 text-xs"
-          style={{ color: "var(--text-secondary)", opacity: 0.4 }}
-        >
+          style={{ color: "var(--text-secondary)", opacity: 0.4 }}>
           No account · No sign-up · Stays on your device
         </p>
       </div>
@@ -126,11 +151,16 @@ function FirstVisitHome() {
 // ─────────────────────────────────────
 
 const QUICK_ACTIONS = [
-  { href: "/mood",    emoji: "🌅", label: "Check-in",   sub: "How are you today?"        },
-  { href: "/therapy", emoji: "🎮", label: "Therapy",    sub: "Soundscape & game"          },
-  { href: "/chat",    emoji: "🌙", label: "Nuri",       sub: "Talk it out"                },
-  { href: "/planner", emoji: "📅", label: "Planner",    sub: "Study with wellness"        },
-  { href: "/profile", emoji: "◉",  label: "Profile",    sub: "Your nunchi report"         },
+  { href: "/mood", emoji: "🌅", label: "Check-in", sub: "How are you today?" },
+  { href: "/therapy", emoji: "🎮", label: "Therapy", sub: "Soundscape & game" },
+  { href: "/chat", emoji: "🌙", label: "Nuri", sub: "Talk it out" },
+  {
+    href: "/planner",
+    emoji: "📅",
+    label: "Planner",
+    sub: "Study with wellness",
+  },
+  { href: "/profile", emoji: "◉", label: "Profile", sub: "Your nunchi report" },
 ];
 
 function ReturningHome() {
@@ -146,8 +176,7 @@ function ReturningHome() {
   return (
     <main
       className="min-h-screen flex flex-col px-5 pt-16 pb-8 relative overflow-hidden"
-      style={{ background: "var(--bg-primary)" }}
-    >
+      style={{ background: "var(--bg-primary)" }}>
       {/* Ambient bg */}
       <div
         className="fixed inset-0 pointer-events-none"
@@ -162,14 +191,12 @@ function ReturningHome() {
         <div className="mb-10">
           <p
             className="text-3xl font-semibold"
-            style={{ color: "var(--text-primary)" }}
-          >
+            style={{ color: "var(--text-primary)" }}>
             {greeting}
           </p>
           <p
             className="text-sm mt-1.5"
-            style={{ color: "var(--text-secondary)" }}
-          >
+            style={{ color: "var(--text-secondary)" }}>
             Nuri is here.
           </p>
         </div>
@@ -183,11 +210,12 @@ function ReturningHome() {
             style={{
               background: "linear-gradient(135deg, #5a70f3, #7c96f8)",
               boxShadow: "0 6px 20px rgba(90,112,243,0.18)",
-            }}
-          >
+            }}>
             <div>
               <p className="font-semibold text-base">Morning check-in</p>
-              <p className="text-xs mt-0.5 opacity-75">60 seconds · How are you carrying today?</p>
+              <p className="text-xs mt-0.5 opacity-75">
+                60 seconds · How are you carrying today?
+              </p>
             </div>
             <span className="text-2xl">🌅</span>
           </Link>
@@ -202,19 +230,16 @@ function ReturningHome() {
                 style={{
                   borderColor: "var(--border)",
                   background: "white",
-                }}
-              >
+                }}>
                 <span className="text-2xl">{action.emoji}</span>
                 <p
                   className="text-sm font-semibold mt-1"
-                  style={{ color: "var(--text-primary)" }}
-                >
+                  style={{ color: "var(--text-primary)" }}>
                   {action.label}
                 </p>
                 <p
                   className="text-xs"
-                  style={{ color: "var(--text-secondary)" }}
-                >
+                  style={{ color: "var(--text-secondary)" }}>
                   {action.sub}
                 </p>
               </Link>
@@ -229,8 +254,7 @@ function ReturningHome() {
             window.location.reload();
           }}
           className="w-full text-center mt-10 text-xs"
-          style={{ color: "var(--text-secondary)", opacity: 0.25 }}
-        >
+          style={{ color: "var(--text-secondary)", opacity: 0.25 }}>
           Reset experience
         </button>
       </div>
