@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import MagicRings from "@/components/MagicRings";
+import { InteractiveGridBox } from "@/components/InteractiveGridBox";
 
 export default function Home() {
   const [isReturning, setIsReturning] = useState(false);
@@ -33,16 +34,16 @@ function FirstVisitHome() {
         <MagicRings
           color="#70AEFF"
           colorTwo="#075FAB"
-          ringCount={6}
-          speed={1}
-          attenuation={10}
-          lineThickness={2}
+          ringCount={5}
+          speed={0.8}
+          attenuation={25}
+          lineThickness={1}
           baseRadius={0.35}
           radiusStep={0.1}
           scaleRate={0.1}
           opacity={1}
-          blur={0}
-          noiseAmount={0.1}
+          blur={8}
+          noiseAmount={0}
           rotation={0}
           ringGap={1.7}
           fadeIn={0.7}
@@ -83,9 +84,20 @@ function FirstVisitHome() {
         />
       </div>
 
-      <div
-        className="relative z-10 flex flex-col items-center text-center nuri-message"
-        style={{ maxWidth: 380 }}>
+      <InteractiveGridBox
+        className="relative z-10 nuri-message p-14"
+        style={{ 
+          width: "100%",
+          maxWidth: 520,
+          borderRadius: 40,
+          background: "linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.1) 100%)",
+          backdropFilter: "blur(40px) saturate(200%)",
+          WebkitBackdropFilter: "blur(40px) saturate(200%)",
+          border: "1px solid rgba(255, 255, 255, 0.5)",
+          boxShadow: "0 24px 64px rgba(0, 0, 0, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.8), inset 1px 0 1px rgba(255, 255, 255, 0.4)"
+        }}
+        gridSize={30}
+      >
         {/* Wordmark */}
         <div className="mb-12">
           <h1
@@ -141,7 +153,7 @@ function FirstVisitHome() {
           style={{ color: "var(--text-secondary)", opacity: 0.4 }}>
           No account · No sign-up · Stays on your device
         </p>
-      </div>
+      </InteractiveGridBox>
     </main>
   );
 }
