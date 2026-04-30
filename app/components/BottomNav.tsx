@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
+import { Sun, Calendar, Gamepad2, Sparkles, User } from "lucide-react";
 
 const NAV = [
-  { href: "/mood",     icon: "🌅", label: "Check-in"  },
-  { href: "/planner",  icon: "📅", label: "Planner"   },
-  { href: "/therapy",  icon: "🎮", label: "Therapy"   },
-  { href: "/chat",     icon: "🌙", label: "Nuri"      },
-  { href: "/profile",  icon: "◉",  label: "Profile"   },
+  { href: "/mood",     icon: Sun,       label: "Check-in" },
+  { href: "/planner",  icon: Calendar,  label: "Planner"  },
+  { href: "/therapy",  icon: Gamepad2,  label: "Therapy"  },
+  { href: "/chat",     icon: Sparkles,  label: "Nuri"     },
+  { href: "/profile",  icon: User,      label: "Profile"  },
 ];
 
 export default function BottomNav() {
@@ -18,48 +20,56 @@ export default function BottomNav() {
   if (pathname === "/" || pathname === "/onboarding") return null;
 
   return (
-    <nav
-      className="fixed bottom-0 left-0 right-0 z-50 flex items-stretch"
-      style={{
-        background: "rgba(250,250,248,0.92)",
-        backdropFilter: "blur(16px)",
-        borderTop: "1px solid var(--border)",
-        paddingBottom: "env(safe-area-inset-bottom)",
-      }}
-    >
-      {NAV.map((item) => {
-        const active = pathname.startsWith(item.href);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="flex-1 flex flex-col items-center justify-center gap-1 py-3 transition-all"
-            style={{
-              color: active ? "var(--accent-blue)" : "var(--text-secondary)",
-              opacity: active ? 1 : 0.55,
-            }}
-          >
-            <span
-              className="text-xl leading-none transition-transform"
-              style={{ transform: active ? "translateY(-1px)" : "none" }}
+    <div className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50">
+      <nav
+        className="flex items-center gap-1 sm:gap-2 px-2 py-2 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.8)]"
+        style={{
+          background: "linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.6) 100%)",
+          backdropFilter: "blur(24px) saturate(200%)",
+          border: "1px solid rgba(255, 255, 255, 0.6)",
+        }}
+      >
+        {NAV.map((item) => {
+          const active = pathname.startsWith(item.href);
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="relative group flex items-center justify-center w-12 h-12 rounded-full transition-colors duration-300"
+              style={{
+                color: active ? "var(--accent-blue)" : "var(--text-secondary)",
+              }}
             >
-              {item.icon}
-            </span>
-            <span
-              className="text-[10px] font-medium tracking-wide"
-              style={{ letterSpacing: "0.03em" }}
-            >
-              {item.label}
-            </span>
-            {active && (
-              <span
-                className="absolute bottom-0 w-6 h-0.5 rounded-full"
-                style={{ background: "var(--accent-blue)" }}
+              {/* Hover background */}
+              <div 
+                className={`absolute inset-0 rounded-full transition-opacity duration-300 ${active ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+                style={{ background: active ? "rgba(90, 112, 243, 0.1)" : "rgba(0,0,0,0.03)" }} 
               />
-            )}
-          </Link>
-        );
-      })}
-    </nav>
+
+              <Icon 
+                size={22} 
+                strokeWidth={active ? 2.5 : 2} 
+                className="relative z-10 transition-transform duration-300 group-hover:scale-110 group-active:scale-95"
+              />
+              
+              {/* Tooltip */}
+              <span className="absolute -top-12 scale-95 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-200 px-3 py-1.5 bg-white text-[11px] font-semibold text-[var(--text-primary)] rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] whitespace-nowrap pointer-events-none">
+                {item.label}
+              </span>
+              
+              {/* Animated active indicator */}
+              {active && (
+                <motion.div
+                  layoutId="nav-indicator"
+                  className="absolute -bottom-1.5 w-1.5 h-1.5 rounded-full bg-[var(--accent-blue)]"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+              )}
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
   );
 }

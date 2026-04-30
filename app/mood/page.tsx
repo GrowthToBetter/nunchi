@@ -177,9 +177,7 @@ export default function MoodPage() {
       <motion.div 
         className="absolute inset-0 pointer-events-none opacity-40 transition-colors duration-1000"
         style={{
-          background: moodObj 
-            ? `radial-gradient(circle at 50% 0%, ${moodObj.glow}, transparent 70%)` 
-            : "radial-gradient(circle at 50% 0%, rgba(90, 112, 243, 0.1), transparent 70%)"
+          backgroundColor: moodObj ? moodObj.glow : "rgba(90, 112, 243, 0.05)"
         }}
       />
 
@@ -197,9 +195,12 @@ export default function MoodPage() {
             <InteractiveGridBox
               className="p-8 rounded-[40px] border border-white/50 shadow-[0_24px_64px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.8)]"
               style={{
-                background: "linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.3) 100%)",
+                background: "linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.2) 100%)",
                 backdropFilter: "blur(40px) saturate(200%)"
               }}
+              highlightColor={moodObj?.glow}
+              glowColor={moodObj?.glow ? moodObj.glow.replace(", 0.4)", ", 0.05)") : undefined}
+              clickGlowColor={moodObj?.glow ? moodObj.glow.replace(", 0.4)", ", 0.15)") : undefined}
             >
               <div className="text-center mb-8">
                 <p className="text-xs tracking-widest uppercase text-[var(--text-secondary)] mb-2 font-medium">
@@ -219,20 +220,28 @@ export default function MoodPage() {
                   const isSelected = selectedMood === m.value;
                   const Icon = m.icon;
                   return (
-                    <button
+                    <motion.button
                       key={m.value}
                       onClick={() => handleMoodSelect(m.value)}
-                      className="group flex flex-col items-center gap-2 p-4 rounded-3xl transition-all duration-300 relative overflow-hidden"
-                      style={{
+                      className="group flex flex-col items-center gap-2 p-4 rounded-3xl relative overflow-hidden"
+                      animate={{
                         background: isSelected ? "rgba(255, 255, 255, 0.9)" : "rgba(255, 255, 255, 0.4)",
-                        border: `1px solid ${isSelected ? m.color : 'rgba(255, 255, 255, 0.6)'}`,
+                        borderColor: isSelected ? m.color : "rgba(255, 255, 255, 0.6)",
                         boxShadow: isSelected ? `0 8px 24px ${m.glow}` : "0 2px 8px rgba(0,0,0,0.02)",
-                        transform: isSelected ? "translateY(-4px)" : "translateY(0)"
+                        y: isSelected ? -4 : 0
                       }}
+                      whileHover={!isSelected ? {
+                        y: -2,
+                        background: "rgba(255, 255, 255, 0.6)",
+                        boxShadow: `0 8px 20px ${m.glow}`
+                      } : {}}
+                      whileTap={{ scale: 0.96 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                      style={{ borderWidth: 1, borderStyle: "solid" }}
                     >
                       <div 
                         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                        style={{ background: `radial-gradient(circle at center, ${m.glow}, transparent 70%)` }}
+                        style={{ backgroundColor: m.glow }}
                       />
                       <Icon 
                         size={28} 
@@ -242,23 +251,28 @@ export default function MoodPage() {
                       <span className={`text-[11px] font-medium transition-colors ${isSelected ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]"}`}>
                         {m.label}
                       </span>
-                    </button>
+                    </motion.button>
                   );
                 })}
               </div>
 
               <div className="w-full flex flex-col items-center space-y-4">
-                <button
+                <motion.button
                   disabled={!selectedMood}
                   onClick={() => setStep("camera")}
-                  className="w-full py-4 rounded-3xl text-white text-sm font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 active:scale-[0.98]"
+                  className="w-full py-4 rounded-3xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                  whileHover={selectedMood ? { y: -2, boxShadow: `inset 0 1px 1px rgba(255,255,255,0.6), 0 12px 32px ${moodObj?.glow}` } : {}}
+                  whileTap={selectedMood ? { scale: 0.98 } : {}}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   style={{ 
-                    background: selectedMood ? `linear-gradient(135deg, ${moodObj?.color}, #5a70f3)` : "var(--border)",
-                    boxShadow: selectedMood ? `0 8px 24px ${moodObj?.glow}` : "none"
+                    backgroundImage: selectedMood ? "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%)" : "none",
+                    backgroundColor: selectedMood ? (moodObj?.color || "#5a70f3") : "var(--border)",
+                    color: selectedMood ? "#1a1a1a" : "var(--text-secondary)",
+                    boxShadow: selectedMood ? `inset 0 1px 1px rgba(255,255,255,0.5), 0 8px 24px ${moodObj?.glow}` : "none"
                   }}
                 >
                   Continue <ArrowRight size={16} />
-                </button>
+                </motion.button>
                 <p className="text-[11px] text-[var(--text-secondary)] font-medium flex items-center gap-1 opacity-60">
                   <Sparkles size={12} /> Nuri won't share this with anyone.
                 </p>
@@ -280,9 +294,12 @@ export default function MoodPage() {
             <InteractiveGridBox
               className="p-8 rounded-[40px] border border-white/50 shadow-[0_24px_64px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.8)]"
               style={{
-                background: "linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.3) 100%)",
+                background: "linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.2) 100%)",
                 backdropFilter: "blur(40px) saturate(200%)"
               }}
+              highlightColor={moodObj?.glow}
+              glowColor={moodObj?.glow ? moodObj.glow.replace(", 0.4)", ", 0.05)") : undefined}
+              clickGlowColor={moodObj?.glow ? moodObj.glow.replace(", 0.4)", ", 0.15)") : undefined}
             >
               <div className="flex justify-center mb-8">
                 <div
@@ -320,34 +337,47 @@ export default function MoodPage() {
 
               <div className="space-y-3 w-full">
                 {!cameraActive ? (
-                  <button
+                  <motion.button
                     onClick={startCamera}
-                    className="w-full py-4 rounded-3xl text-white text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[0.98]"
+                    className="w-full py-4 rounded-3xl text-sm font-semibold flex items-center justify-center gap-2"
+                    whileHover={{ y: -2, boxShadow: `inset 0 1px 1px rgba(255,255,255,0.6), 0 12px 32px ${moodObj?.glow}` }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
                     style={{ 
-                      background: `linear-gradient(135deg, ${moodObj?.color}, #5a70f3)`,
-                      boxShadow: `0 8px 24px ${moodObj?.glow}`
+                      backgroundImage: "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%)",
+                      backgroundColor: moodObj?.color || "#5a70f3",
+                      color: "#1a1a1a",
+                      boxShadow: `inset 0 1px 1px rgba(255,255,255,0.5), 0 8px 24px ${moodObj?.glow}`
                     }}
                   >
                     <Camera size={18} /> Allow Camera
-                  </button>
+                  </motion.button>
                 ) : (
-                  <button
+                  <motion.button
                     onClick={() => setStep("questions")}
-                    className="w-full py-4 rounded-3xl text-white text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[0.98]"
+                    className="w-full py-4 rounded-3xl text-sm font-semibold flex items-center justify-center gap-2"
+                    whileHover={{ y: -2, boxShadow: `inset 0 1px 1px rgba(255,255,255,0.6), 0 12px 32px ${moodObj?.glow}` }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
                     style={{ 
-                      background: `linear-gradient(135deg, ${moodObj?.color}, #5a70f3)`,
-                      boxShadow: `0 8px 24px ${moodObj?.glow}`
+                      backgroundImage: "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%)",
+                      backgroundColor: moodObj?.color || "#5a70f3",
+                      color: "#1a1a1a",
+                      boxShadow: `inset 0 1px 1px rgba(255,255,255,0.5), 0 8px 24px ${moodObj?.glow}`
                     }}
                   >
                     Looks good, continue <ArrowRight size={18} />
-                  </button>
+                  </motion.button>
                 )}
-                <button
+                <motion.button
                   onClick={skipCamera}
-                  className="w-full py-3 rounded-3xl text-sm font-medium text-[var(--text-secondary)] flex items-center justify-center gap-2 transition-all bg-white/40 hover:bg-white/60 border border-white/40"
+                  className="w-full py-3 rounded-3xl text-sm font-medium text-[var(--text-secondary)] flex items-center justify-center gap-2 bg-white/40 border border-white/40"
+                  whileHover={{ y: -2, backgroundColor: "rgba(255,255,255,0.6)", boxShadow: "0 8px 24px rgba(0,0,0,0.05)" }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 >
                   <CameraOff size={16} /> Skip camera
-                </button>
+                </motion.button>
               </div>
             </InteractiveGridBox>
           </motion.div>
@@ -366,9 +396,12 @@ export default function MoodPage() {
             <InteractiveGridBox
               className="p-8 rounded-[40px] border border-white/50 shadow-[0_24px_64px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.8)]"
               style={{
-                background: "linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.3) 100%)",
+                background: "linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.2) 100%)",
                 backdropFilter: "blur(40px) saturate(200%)"
               }}
+              highlightColor={moodObj?.glow}
+              glowColor={moodObj?.glow ? moodObj.glow.replace(", 0.4)", ", 0.05)") : undefined}
+              clickGlowColor={moodObj?.glow ? moodObj.glow.replace(", 0.4)", ", 0.15)") : undefined}
             >
               {/* Progress */}
               <div className="flex gap-2 mb-8">
@@ -384,29 +417,55 @@ export default function MoodPage() {
                 ))}
               </div>
 
-              <div className="mb-8">
-                <p className="text-xs uppercase tracking-widest text-[var(--text-secondary)] mb-2 font-medium">
-                  Question {currentQ + 1} of {questions.length}
-                </p>
-                <h2 className="text-2xl font-semibold text-[var(--text-primary)] leading-snug">
-                  {questions[currentQ].q}
-                </h2>
-              </div>
-
-              <div className="space-y-3 w-full mb-6">
-                {questions[currentQ].options.map((opt) => (
-                  <button
-                    key={opt}
-                    onClick={() => handleAnswer(opt)}
-                    className="group w-full text-left px-5 py-4 rounded-3xl border border-white/60 bg-white/50 hover:bg-white hover:border-[var(--accent-blue)] text-sm font-medium text-[var(--text-primary)] transition-all flex items-center justify-between"
-                    style={{
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.02)"
-                    }}
+              <div className="relative min-h-[280px]">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentQ}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    className="w-full"
                   >
-                    <span>{opt}</span>
-                    <ArrowRight size={16} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-[var(--accent-blue)]" />
-                  </button>
-                ))}
+                    <div className="mb-8">
+                      <p className="text-xs uppercase tracking-widest text-[var(--text-secondary)] mb-2 font-medium">
+                        Question {currentQ + 1} of {questions.length}
+                      </p>
+                      <h2 className="text-2xl font-semibold text-[var(--text-primary)] leading-snug">
+                        {questions[currentQ].q}
+                      </h2>
+                    </div>
+
+                    <div className="space-y-3 w-full mb-6">
+                      {questions[currentQ].options.map((opt) => (
+                        <motion.button
+                          key={opt}
+                          onClick={() => handleAnswer(opt)}
+                          className="group w-full text-left px-5 py-4 rounded-3xl border border-white/60 bg-white/50 text-sm font-medium text-[var(--text-primary)] flex items-center justify-between"
+                          whileHover={{ 
+                            backgroundColor: "rgba(255,255,255,1)",
+                            borderColor: moodObj?.color ?? "var(--accent-blue)",
+                            boxShadow: `0 8px 20px ${moodObj?.glow ?? "rgba(90, 112, 243, 0.15)"}`,
+                            scale: 1.01,
+                            y: -2
+                          }}
+                          whileTap={{ scale: 0.98 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                          style={{
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.02)"
+                          }}
+                        >
+                          <span>{opt}</span>
+                          <ArrowRight 
+                            size={16} 
+                            className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" 
+                            style={{ color: moodObj?.color ?? "var(--accent-blue)" }}
+                          />
+                        </motion.button>
+                      ))}
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
               </div>
 
               <div className="flex justify-center w-full">
@@ -434,20 +493,24 @@ export default function MoodPage() {
             <InteractiveGridBox
               className="p-8 rounded-[40px] border border-white/50 shadow-[0_24px_64px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.8)]"
               style={{
-                background: "linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.3) 100%)",
+                background: "linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.2) 100%)",
                 backdropFilter: "blur(40px) saturate(200%)"
               }}
+              highlightColor={moodObj?.glow}
+              glowColor={moodObj?.glow ? moodObj.glow.replace(", 0.4)", ", 0.05)") : undefined}
+              clickGlowColor={moodObj?.glow ? moodObj.glow.replace(", 0.4)", ", 0.15)") : undefined}
             >
               <div className="flex flex-col items-center w-full">
                 {/* Nuri bubble */}
                 <div
                   className="w-20 h-20 rounded-[24px] flex items-center justify-center mb-8"
                   style={{ 
-                    background: `linear-gradient(135deg, ${moodObj?.color ?? "#e0e9ff"}, #ffffff)`,
+                    backgroundImage: "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%)",
+                    backgroundColor: moodObj?.color ?? "#e0e9ff",
                     boxShadow: `0 12px 32px ${moodObj?.glow ?? "rgba(90,112,243,0.2)"}, inset 0 1px 2px rgba(255,255,255,0.8)`
                   }}
                 >
-                  {moodObj ? <moodObj.icon size={36} color="#ffffff" strokeWidth={2} /> : <Sparkles size={36} color="#5a70f3" />}
+                  {moodObj ? <moodObj.icon size={36} color="#1a1a1a" strokeWidth={2} /> : <Sparkles size={36} color="#5a70f3" />}
                 </div>
 
                 <div
@@ -485,7 +548,9 @@ export default function MoodPage() {
                 <div
                   className="w-full p-5 rounded-3xl border border-white/60 text-left mb-8"
                   style={{ 
-                    background: `linear-gradient(135deg, ${moodObj?.glow ?? "rgba(90,112,243,0.1)"}, rgba(255,255,255,0.4))`
+                    backgroundImage: "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%)",
+                    backgroundColor: moodObj?.glow ?? "rgba(90,112,243,0.1)",
+                    boxShadow: "inset 0 1px 1px rgba(255,255,255,0.4)"
                   }}
                 >
                   <p className="text-xs text-[var(--text-primary)] font-semibold mb-2 uppercase tracking-widest">
@@ -501,22 +566,30 @@ export default function MoodPage() {
                 </div>
 
                 <div className="flex gap-3 w-full">
-                  <a
+                  <motion.a
                     href="/planner"
-                    className="flex-1 py-4 rounded-3xl text-center text-white text-sm font-semibold transition-all hover:opacity-90 active:scale-[0.98]"
+                    className="flex-1 py-4 rounded-3xl text-center text-sm font-semibold block"
+                    whileHover={{ y: -2, boxShadow: `inset 0 1px 1px rgba(255,255,255,0.6), 0 12px 32px ${moodObj?.glow ?? "rgba(90,112,243,0.3)"}` }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
                     style={{ 
-                      background: `linear-gradient(135deg, ${moodObj?.color ?? "#5a70f3"}, #5a70f3)`,
-                      boxShadow: `0 8px 24px ${moodObj?.glow ?? "rgba(90,112,243,0.3)"}`
+                      backgroundImage: "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%)",
+                      backgroundColor: moodObj?.color ?? "#5a70f3",
+                      color: "#1a1a1a",
+                      boxShadow: `inset 0 1px 1px rgba(255,255,255,0.5), 0 8px 24px ${moodObj?.glow ?? "rgba(90,112,243,0.3)"}`
                     }}
                   >
                     Start studying
-                  </a>
-                  <a
+                  </motion.a>
+                  <motion.a
                     href="/therapy"
-                    className="flex-1 py-4 rounded-3xl text-center text-sm font-semibold transition-all bg-white/50 hover:bg-white/80 border border-white/80 text-[var(--text-primary)] active:scale-[0.98]"
+                    className="flex-1 py-4 rounded-3xl text-center text-sm font-semibold bg-white/50 border border-white/80 text-[var(--text-primary)] block"
+                    whileHover={{ y: -2, backgroundColor: "rgba(255,255,255,0.8)", boxShadow: "0 8px 24px rgba(0,0,0,0.05)" }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   >
                     Open soundscape
-                  </a>
+                  </motion.a>
                 </div>
               </div>
             </InteractiveGridBox>

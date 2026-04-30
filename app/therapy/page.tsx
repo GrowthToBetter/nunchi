@@ -2,24 +2,24 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Waves, 
-  BookOpen, 
-  Users, 
-  Palette, 
-  Zap, 
-  Volume2, 
-  VolumeX, 
-  Play, 
+import {
+  Waves,
+  BookOpen,
+  Users,
+  Palette,
+  Zap,
+  Volume2,
+  VolumeX,
+  Play,
   Square,
-  Sprout, 
-  Leaf, 
-  Flower2, 
-  TreePine, 
-  Sun, 
-  Moon, 
-  Star, 
-  Cloud, 
+  Sprout,
+  Leaf,
+  Flower2,
+  TreePine,
+  Sun,
+  Moon,
+  Star,
+  Cloud,
   Sparkles,
   RotateCcw
 } from "lucide-react";
@@ -36,57 +36,57 @@ const MODES: {
   theory: string;
   textColor: string;
 }[] = [
-  {
-    id: "grounding",
-    label: "Grounding",
-    icon: Waves,
-    desc: "Breath-synced visuals · 4Hz theta · For when you feel trapped",
-    color: "#dbeafe",
-    textColor: "#1e40af",
-    freq: 4,
-    theory: "IMV Model — interrupts cognitive entrapment loop",
-  },
-  {
-    id: "storytelling",
-    label: "Storytelling",
-    icon: BookOpen,
-    desc: "Narrative distancing · 6Hz theta · For when you feel defeated",
-    color: "#ede9fe",
-    textColor: "#5b21b6",
-    freq: 6,
-    theory: "IMV pre-motivational phase — defeat processed via proxy",
-  },
-  {
-    id: "social",
-    label: "Social Silence",
-    icon: Users,
-    desc: "같이 있어줌 · 10Hz alpha · Belonging without disclosure",
-    color: "#d1fae5",
-    textColor: "#065f46",
-    freq: 10,
-    theory: "IPTS — thwarted belonging addressed through co-presence",
-  },
-  {
-    id: "release",
-    label: "Release",
-    icon: Palette,
-    desc: "Contribution canvas · 8Hz alpha · Draw for others",
-    color: "#fef3c7",
-    textColor: "#92400e",
-    freq: 8,
-    theory: "IPTS — burdensomeness inverted: user becomes giver",
-  },
-  {
-    id: "focus",
-    label: "Focus",
-    icon: Zap,
-    desc: "Gentle puzzles · 40Hz gamma · For neutral/focused states",
-    color: "#f0fdf4",
-    textColor: "#14532d",
-    freq: 40,
-    theory: "General — gamma waves support focused cognition",
-  },
-];
+    {
+      id: "grounding",
+      label: "Grounding",
+      icon: Waves,
+      desc: "Breath-synced visuals · 4Hz theta · For when you feel trapped",
+      color: "#dbeafe",
+      textColor: "#1e40af",
+      freq: 4,
+      theory: "IMV Model — interrupts cognitive entrapment loop",
+    },
+    {
+      id: "storytelling",
+      label: "Storytelling",
+      icon: BookOpen,
+      desc: "Narrative distancing · 6Hz theta · For when you feel defeated",
+      color: "#ede9fe",
+      textColor: "#5b21b6",
+      freq: 6,
+      theory: "IMV pre-motivational phase — defeat processed via proxy",
+    },
+    {
+      id: "social",
+      label: "Social Silence",
+      icon: Users,
+      desc: "같이 있어줌 · 10Hz alpha · Belonging without disclosure",
+      color: "#d1fae5",
+      textColor: "#065f46",
+      freq: 10,
+      theory: "IPTS — thwarted belonging addressed through co-presence",
+    },
+    {
+      id: "release",
+      label: "Release",
+      icon: Palette,
+      desc: "Contribution canvas · 8Hz alpha · Draw for others",
+      color: "#fef3c7",
+      textColor: "#92400e",
+      freq: 8,
+      theory: "IPTS — burdensomeness inverted: user becomes giver",
+    },
+    {
+      id: "focus",
+      label: "Focus",
+      icon: Zap,
+      desc: "Gentle puzzles · 40Hz gamma · For neutral/focused states",
+      color: "#f0fdf4",
+      textColor: "#14532d",
+      freq: 40,
+      theory: "General — gamma waves support focused cognition",
+    },
+  ];
 
 const FOCUS_ICONS = [Sprout, Leaf, Flower2, TreePine, Sun, Moon, Star, Cloud, Sparkles];
 
@@ -334,7 +334,7 @@ export default function TherapyPage() {
                 key={m.id}
                 onClick={() => {
                   if (active) endSession();
-                  setSelectedMode(m.id);
+                  setSelectedMode(m.id); q
                 }}
                 className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300"
                 style={{
@@ -361,7 +361,7 @@ export default function TherapyPage() {
               exit="exit"
               className="w-full max-w-sm flex flex-col items-center text-center p-8 rounded-[40px] bg-white/30 backdrop-blur-lg border border-white/40 shadow-xl"
             >
-              <div 
+              <div
                 className="w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-inner"
                 style={{ background: "rgba(255,255,255,0.5)" }}
               >
@@ -376,7 +376,7 @@ export default function TherapyPage() {
               <p className="text-xs mb-8 italic opacity-60" style={{ color: mode.textColor }}>
                 {mode.theory}
               </p>
-              
+
               <div className="w-full space-y-3">
                 {audioOn !== false && (
                   <p className="text-[11px] opacity-70 font-medium bg-white/40 py-2 px-3 rounded-xl inline-flex items-center justify-center gap-1.5" style={{ color: mode.textColor }}>
@@ -440,7 +440,7 @@ export default function TherapyPage() {
               {selectedMode === "storytelling" && (
                 <div className="w-full text-center flex flex-col items-center">
                   <AnimatePresence mode="wait">
-                    <motion.div 
+                    <motion.div
                       key={storyStep}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -453,12 +453,12 @@ export default function TherapyPage() {
                       </p>
                     </motion.div>
                   </AnimatePresence>
-                  
+
                   <button
                     onClick={() => setStoryStep((s) => Math.min(s + 1, STORIES.length - 1))}
                     disabled={storyStep >= STORIES.length - 1}
                     className="py-3 px-6 rounded-full text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
-                    style={{ 
+                    style={{
                       backgroundColor: mode.textColor,
                       color: mode.color
                     }}
@@ -478,7 +478,7 @@ export default function TherapyPage() {
                       className="absolute w-28 h-28 rounded-full border-2 border-dashed flex items-center justify-center bg-white/20 backdrop-blur-sm"
                       style={{ borderColor: mode.textColor, left: "5%", top: "15%" }}
                     >
-                       <Users size={32} style={{ color: mode.textColor, opacity: 0.5 }} />
+                      <Users size={32} style={{ color: mode.textColor, opacity: 0.5 }} />
                     </motion.div>
                     <motion.div
                       animate={{ y: [0, 15, 0], x: [0, -5, 0] }}
@@ -486,7 +486,7 @@ export default function TherapyPage() {
                       className="absolute w-24 h-24 rounded-full border-[3px] flex items-center justify-center bg-white/30 backdrop-blur-md shadow-lg"
                       style={{ borderColor: mode.textColor, right: "5%", top: "35%" }}
                     >
-                       <Users size={28} style={{ color: mode.textColor }} />
+                      <Users size={28} style={{ color: mode.textColor }} />
                     </motion.div>
                   </div>
                   <div className="text-center bg-white/40 px-6 py-4 rounded-3xl backdrop-blur-md">
@@ -495,7 +495,7 @@ export default function TherapyPage() {
                       Being present together
                     </p>
                     <p className="text-xs mt-2 opacity-60" style={{ color: mode.textColor }}>
-                      Someone else is here right now.<br/>Same soundscape. No words needed.
+                      Someone else is here right now.<br />Same soundscape. No words needed.
                     </p>
                   </div>
                 </div>
