@@ -42,7 +42,7 @@ function FirstVisitHome() {
           radiusStep={0.1}
           scaleRate={0.1}
           opacity={1}
-          blur={8}
+          blur={0}
           noiseAmount={0}
           rotation={0}
           ringGap={1.7}
@@ -86,7 +86,7 @@ function FirstVisitHome() {
 
       <InteractiveGridBox
         className="relative z-10 nuri-message p-14"
-        style={{ 
+        style={{
           width: "100%",
           maxWidth: 520,
           borderRadius: 40,

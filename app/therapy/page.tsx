@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Waves,
@@ -90,6 +90,19 @@ const MODES: {
 
 const FOCUS_ICONS = [Sprout, Leaf, Flower2, TreePine, Sun, Moon, Star, Cloud, Sparkles];
 
+const STORIES = [
+  "The exam results came. Some were what they hoped. Some weren't. But the student had changed how they kept score. Not by marks on paper but by how far they had come.",
+  "She had planned to be productive. But the afternoon came and went, filled only with stillness. Later, she realized that stillness was exactly what she had needed all along.",
+  "He took a step back. Not out of defeat but out of wisdom. Sometimes the clearest view comes not from moving forward, but from pausing to see where you already are.",
+  "She wrote the letter and never sent it. Not because she had nothing to say but because writing it was enough. Some truths are meant for you, not for someone else.",
+  "The week felt endless. Every day a little harder than the last. But Friday arrived as it always does. And in that small certainty, she found something worth holding on to.",
+  "He had tried before and stumbled. This time, he began differently not with the desire to be perfect, but with the courage to simply begin. That was more than enough.",
+  "In the waiting room, she noticed everyone around her each carrying something invisible. And for a moment, she felt less alone in what she was carrying too.",
+  "The rain kept falling. She stopped trying to outrun it and stood still. Slowly, she realized she had been so afraid of being caught in the storm, she forgot she had survived every one before.",
+  "He looked in the mirror not to find flaws, but to look for someone who had tried. And he found him. Tired, honest, still going. That was more than he had expected.",
+  "She didn't finish everything on her list. She didn't solve every problem. But she showed up, and she was kind, and she kept breathing. Some days, that is everything."
+];
+
 const pageVariants = {
   initial: { opacity: 0, y: 15 },
   animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
@@ -105,18 +118,73 @@ export default function TherapyPage() {
   const [autoStarted, setAutoStarted] = useState(false);
   const [storyStep, setStoryStep] = useState(0);
   const [audioOn, setAudioOn] = useState(false);
+  const [audioTime, setAudioTime] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
+  const [hasCompletedStory, setHasCompletedStory] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const sessionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const breathTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isDrawing = useRef(false);
+  const storyAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setHasCompletedStory(localStorage.getItem("storyFinished") === "true");
+    }
+  }, []);
+
+  const parsedStories = useMemo(() => {
+    let totalChars = 0;
+    const mapping = STORIES.map(story => {
+      const words = story.split(' ');
+      const mappedWords = words.map(word => {
+        const start = totalChars;
+        totalChars += word.length + 1;
+        const end = totalChars - 1;
+        return { text: word, start, end };
+      });
+      return { words: mappedWords };
+    });
+    return { mapping, totalChars };
+  }, []);
+
+  // Sync logic
+  useEffect(() => {
+    if (selectedMode !== "storytelling" || audioDuration === 0 || !active) return;
+    const SYNC_OFFSET = 1.0; // Memajukan teks 1 detik agar tidak telat
+    const effectiveTime = Math.min(audioTime + SYNC_OFFSET, audioDuration);
+    const currentChars = (effectiveTime / audioDuration) * parsedStories.totalChars;
+    
+    let newStep = 0;
+    for (let i = 0; i < parsedStories.mapping.length; i++) {
+      const para = parsedStories.mapping[i];
+      const lastWord = para.words[para.words.length - 1];
+      if (currentChars <= lastWord.end) {
+        newStep = i;
+        break;
+      }
+      if (i === parsedStories.mapping.length - 1) newStep = i;
+    }
+    
+    if (newStep !== storyStep) {
+      setStoryStep(newStep);
+    }
+  }, [audioTime, audioDuration, active, selectedMode, storyStep, parsedStories]);
 
   const mode = MODES.find((m) => m.id === selectedMode)!;
 
   // Start binaural beat
   const startAudio = useCallback(() => {
     if (!mode) return;
+    setAudioOn(true);
+    if (mode.id === "storytelling") {
+      if (storyAudioRef.current) {
+        storyAudioRef.current.play().catch(() => {});
+      }
+      return;
+    }
     try {
       const ctx = new AudioContext();
       audioCtxRef.current = ctx;
@@ -141,7 +209,6 @@ export default function TherapyPage() {
 
       leftOsc.start();
       rightOsc.start();
-      setAudioOn(true);
     } catch {
       // Web Audio not available
     }
@@ -157,10 +224,13 @@ export default function TherapyPage() {
   }, [autoStarted]);
 
   const stopAudio = () => {
+    setAudioOn(false);
     if (audioCtxRef.current) {
       audioCtxRef.current.close();
       audioCtxRef.current = null;
-      setAudioOn(false);
+    }
+    if (storyAudioRef.current) {
+      storyAudioRef.current.pause();
     }
   };
 
@@ -204,12 +274,21 @@ export default function TherapyPage() {
     setSessionTime(0);
     setBreathCount(0);
     setStoryStep(0);
+    setAudioTime(0);
     startAudio();
+    if (selectedMode === "storytelling" && storyAudioRef.current) {
+      storyAudioRef.current.currentTime = 0;
+      storyAudioRef.current.play().catch(() => {});
+    }
   };
 
   const endSession = () => {
     setActive(false);
     stopAudio();
+    if (storyAudioRef.current) {
+      storyAudioRef.current.pause();
+      storyAudioRef.current.currentTime = 0;
+    }
     // Clear canvas
     const canvas = canvasRef.current;
     if (canvas) {
@@ -269,14 +348,6 @@ export default function TherapyPage() {
     }
   };
 
-  const STORIES = [
-    "There was once a student who felt they were falling behind — not just in exams, but in life itself.",
-    "Every morning, they would look in the mirror and see someone their parents had hoped for, not who they were.",
-    "One evening, they found a quiet bench where no one could see them. And they let themselves feel everything.",
-    "Slowly — not all at once — they discovered that being seen, even by yourself, is the beginning of something.",
-    "The exam results came. Some were what they hoped. Some weren't. But the student had changed how they kept score.",
-  ];
-
   const ModeIcon = mode.icon;
 
   return (
@@ -334,7 +405,7 @@ export default function TherapyPage() {
                 key={m.id}
                 onClick={() => {
                   if (active) endSession();
-                  setSelectedMode(m.id); q
+                  setSelectedMode(m.id);
                 }}
                 className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300"
                 style={{
@@ -438,7 +509,38 @@ export default function TherapyPage() {
 
               {/* Storytelling Mode */}
               {selectedMode === "storytelling" && (
-                <div className="w-full text-center flex flex-col items-center">
+                <div className="w-full text-center flex flex-col items-center relative">
+                  <audio 
+                    ref={storyAudioRef} 
+                    src="/storytelling1.mp3" 
+                    autoPlay
+                    onTimeUpdate={(e) => setAudioTime(e.currentTarget.currentTime)}
+                    onLoadedMetadata={(e) => setAudioDuration(e.currentTarget.duration)}
+                    onEnded={() => {
+                      setStoryStep(STORIES.length - 1);
+                      if (typeof window !== "undefined") {
+                        localStorage.setItem("storyFinished", "true");
+                        setHasCompletedStory(true);
+                      }
+                    }}
+                  />
+
+                  {/* Progress Indicator */}
+                  {audioDuration > 0 && (
+                    <div className="w-full max-w-md h-1.5 bg-white/30 rounded-full mb-6 overflow-hidden">
+                      <div 
+                        className="h-full bg-[#9333ea] transition-all duration-300"
+                        style={{ width: `${(audioTime / audioDuration) * 100}%` }}
+                      />
+                    </div>
+                  )}
+
+                  {hasCompletedStory && (
+                    <div className="mb-4 text-xs font-medium text-purple-700 bg-white/50 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                      <Sparkles size={14} /> You have previously finished this story
+                    </div>
+                  )}
+
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={storyStep}
@@ -446,25 +548,65 @@ export default function TherapyPage() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.6 }}
-                      className="w-full bg-white/60 backdrop-blur-md border border-white/50 rounded-[32px] p-8 mb-8 shadow-lg"
+                      className="w-full bg-white/60 backdrop-blur-md border border-white/50 rounded-[32px] p-8 mb-8 shadow-lg relative"
                     >
-                      <p className="text-lg leading-relaxed font-medium" style={{ color: mode.textColor }}>
-                        {STORIES[storyStep]}
+                      {hasCompletedStory && audioTime < audioDuration && audioDuration > 0 && (
+                        <button
+                          onClick={() => {
+                            if (storyAudioRef.current) {
+                              storyAudioRef.current.currentTime = audioDuration;
+                              storyAudioRef.current.pause();
+                            }
+                            setAudioTime(audioDuration);
+                            setStoryStep(STORIES.length - 1);
+                          }}
+                          className="absolute top-4 right-4 py-1.5 px-4 rounded-full text-[11px] uppercase font-bold bg-purple-100/60 hover:bg-purple-200 text-purple-800 transition-colors shadow-sm"
+                        >
+                          Skip
+                        </button>
+                      )}
+                      <p className="text-[20px] leading-relaxed font-medium transition-all duration-300">
+                        {parsedStories.mapping[storyStep]?.words.map((wordObj, i) => {
+                          const SYNC_OFFSET = 1.0;
+                          const effectiveTime = Math.min(audioTime + SYNC_OFFSET, audioDuration);
+                          const currentChars = audioDuration > 0 ? (effectiveTime / audioDuration) * parsedStories.totalChars : 0;
+                          const isHighlighted = currentChars >= wordObj.start;
+                          return (
+                            <span 
+                              key={i} 
+                              className={`transition-colors duration-300 ${isHighlighted ? "font-bold text-[#9333ea]" : ""}`}
+                              style={{ 
+                                 color: isHighlighted ? "#9333ea" : mode.textColor, 
+                                 opacity: isHighlighted ? 1 : 0.4 
+                              }}
+                            >
+                              {wordObj.text}{" "}
+                            </span>
+                          );
+                        })}
                       </p>
                     </motion.div>
                   </AnimatePresence>
 
-                  <button
-                    onClick={() => setStoryStep((s) => Math.min(s + 1, STORIES.length - 1))}
-                    disabled={storyStep >= STORIES.length - 1}
-                    className="py-3 px-6 rounded-full text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
-                    style={{
-                      backgroundColor: mode.textColor,
-                      color: mode.color
-                    }}
-                  >
-                    {storyStep < STORIES.length - 1 ? "Continue the story →" : "The story continues in you."}
-                  </button>
+                  {!audioDuration && (
+                    <button
+                      onClick={() => setStoryStep((s) => Math.min(s + 1, STORIES.length - 1))}
+                      disabled={storyStep >= STORIES.length - 1}
+                      className="py-3 px-6 rounded-full text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+                      style={{
+                        backgroundColor: mode.textColor,
+                        color: mode.color
+                      }}
+                    >
+                      {storyStep < STORIES.length - 1 ? "Continue the story →" : "The story continues in you."}
+                    </button>
+                  )}
+
+                  {audioTime >= audioDuration && audioDuration > 0 && (
+                     <p className="text-sm font-semibold italic opacity-80 mt-2" style={{ color: mode.textColor }}>
+                       The story continues in you.
+                     </p>
+                  )}
                 </div>
               )}
 
