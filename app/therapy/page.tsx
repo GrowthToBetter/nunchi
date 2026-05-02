@@ -24,6 +24,22 @@ import {
   RotateCcw
 } from "lucide-react";
 
+const PhaseTimer = ({ duration, startTime }: { duration: number, startTime: number }) => {
+  const [timeLeft, setTimeLeft] = useState(duration);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, duration - elapsed);
+      setTimeLeft(remaining);
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [duration, startTime]);
+
+  return <span>{(timeLeft / 1000).toFixed(1)}</span>;
+};
+
 type GameMode = "grounding" | "storytelling" | "social" | "release" | "focus";
 
 const MODES: {
@@ -121,6 +137,8 @@ export default function TherapyPage() {
   const [audioTime, setAudioTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
   const [hasCompletedStory, setHasCompletedStory] = useState(false);
+  const [breathPhaseStartTime, setBreathPhaseStartTime] = useState(0);
+  const [currentPhaseDuration, setCurrentPhaseDuration] = useState(4000);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -243,8 +261,12 @@ export default function TherapyPage() {
       { phase: "exhale" as const, duration: 6000 },
     ];
     let idx = 0;
+    let isMounted = true;
     const next = () => {
+      if (!isMounted) return;
       setBreathPhase(CYCLE[idx].phase);
+      setBreathPhaseStartTime(Date.now());
+      setCurrentPhaseDuration(CYCLE[idx].duration);
       breathTimerRef.current = setTimeout(() => {
         idx = (idx + 1) % CYCLE.length;
         if (idx === 0) setBreathCount((c) => c + 1);
@@ -253,6 +275,7 @@ export default function TherapyPage() {
     };
     next();
     return () => {
+      isMounted = false;
       if (breathTimerRef.current) clearTimeout(breathTimerRef.current);
     };
   }, [active, selectedMode]);
@@ -474,36 +497,97 @@ export default function TherapyPage() {
             >
               {/* Grounding Mode */}
               {selectedMode === "grounding" && (
-                <div className="flex flex-col items-center gap-12">
+                <div className="flex flex-col items-center gap-16 relative w-full h-[55vh] justify-center mt-4">
+                  
+                  {/* Expanding ripples during Exhale */}
+                  <AnimatePresence>
+                    {breathPhase === "exhale" && (
+                      <motion.div
+                        key={breathCount}
+                        initial={{ scale: 0.8, opacity: 0.5 }}
+                        animate={{ scale: 2.5, opacity: 0 }}
+                        transition={{ duration: 6, ease: "easeOut" }}
+                        className="absolute w-56 h-56 rounded-full border border-white/40 pointer-events-none"
+                        style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
+                      />
+                    )}
+                  </AnimatePresence>
+
                   <motion.div
                     animate={{
-                      scale: breathPhase === "inhale" ? 1.5 : breathPhase === "hold" ? 1.5 : 0.8,
-                      opacity: breathPhase === "hold" ? 0.9 : 0.6,
+                      scale: breathPhase === "inhale" ? 1.3 : breathPhase === "hold" ? 1.3 : 0.9,
+                      boxShadow: breathPhase === "inhale" 
+                        ? "0 0 60px rgba(255,255,255,0.6)" 
+                        : breathPhase === "hold" 
+                        ? "0 0 80px rgba(255,255,255,0.8)" 
+                        : "0 0 20px rgba(255,255,255,0.2)"
                     }}
                     transition={{
                       duration: breathPhase === "inhale" ? 4 : breathPhase === "hold" ? 2 : 6,
                       ease: "easeInOut"
                     }}
-                    className="w-48 h-48 rounded-full border-[6px] flex items-center justify-center shadow-2xl backdrop-blur-sm"
+                    className="relative w-56 h-56 rounded-full flex flex-col items-center justify-center backdrop-blur-md"
                     style={{
-                      borderColor: mode.textColor,
-                      backgroundColor: "rgba(255,255,255,0.4)",
+                      backgroundColor: "rgba(255,255,255,0.25)",
+                      border: "1px solid rgba(255,255,255,0.5)"
                     }}
                   >
-                    <p
-                      className="text-center font-bold capitalize text-lg tracking-widest"
-                      style={{ color: mode.textColor }}
-                    >
-                      {breathPhase}
-                      <br />
-                      <span className="text-xs font-semibold opacity-60 tracking-normal">
-                        {breathPhase === "inhale" ? "4s" : breathPhase === "hold" ? "2s" : "6s"}
-                      </span>
+                    {/* SVG Progress Ring */}
+                    <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none drop-shadow-md">
+                       <motion.circle
+                          key={breathPhaseStartTime}
+                          cx="112"
+                          cy="112"
+                          r="108"
+                          fill="none"
+                          stroke={mode.textColor}
+                          strokeWidth="5"
+                          strokeLinecap="round"
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ duration: currentPhaseDuration / 1000, ease: "linear" }}
+                       />
+                    </svg>
+
+                    <AnimatePresence>
+                      <motion.div
+                        key={breathPhase}
+                        initial={{ opacity: 0, filter: "blur(4px)", scale: 0.9 }}
+                        animate={{ opacity: 1, filter: "blur(0px)", scale: 1 }}
+                        exit={{ opacity: 0, filter: "blur(4px)", scale: 1.1 }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                        className="absolute flex flex-col items-center z-10"
+                      >
+                        <p
+                          className="text-center font-black uppercase text-2xl tracking-[0.2em]"
+                          style={{ color: mode.textColor }}
+                        >
+                          {breathPhase}
+                        </p>
+                        <p 
+                          className="text-sm font-semibold opacity-80 mt-1 bg-white/50 px-4 py-1.5 rounded-full shadow-inner backdrop-blur-sm border border-white/40 font-mono w-[5.5rem] text-center tracking-wider"
+                          style={{ color: mode.textColor }}
+                        >
+                          <PhaseTimer duration={currentPhaseDuration} startTime={breathPhaseStartTime} />s
+                        </p>
+                      </motion.div>
+                    </AnimatePresence>
+
+                  </motion.div>
+                  
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="flex flex-col items-center gap-2"
+                  >
+                    <p className="text-sm font-semibold opacity-90 bg-white/40 backdrop-blur-md px-6 py-3 rounded-full shadow-lg border border-white/50 flex items-center gap-2" style={{ color: mode.textColor }}>
+                      <span className="font-bold text-xl">{breathCount}</span> cycles completed
+                    </p>
+                    <p className="text-xs font-medium opacity-60" style={{ color: mode.textColor }}>
+                      Let your body lead the rhythm
                     </p>
                   </motion.div>
-                  <p className="text-sm font-medium opacity-70 bg-white/30 px-4 py-2 rounded-full" style={{ color: mode.textColor }}>
-                    {breathCount} breath cycles · Let your body lead
-                  </p>
                 </div>
               )}
 
@@ -574,10 +658,11 @@ export default function TherapyPage() {
                           return (
                             <span 
                               key={i} 
-                              className={`transition-colors duration-300 ${isHighlighted ? "font-bold text-[#9333ea]" : ""}`}
+                              className="transition-all duration-700 ease-out"
                               style={{ 
                                  color: isHighlighted ? "#9333ea" : mode.textColor, 
-                                 opacity: isHighlighted ? 1 : 0.4 
+                                 opacity: isHighlighted ? 1 : 0.3,
+                                 textShadow: isHighlighted ? "0 4px 12px rgba(147, 51, 234, 0.25)" : "none"
                               }}
                             >
                               {wordObj.text}{" "}

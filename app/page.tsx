@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import MagicRings from "@/components/MagicRings";
 import { InteractiveGridBox } from "@/components/InteractiveGridBox";
+import { motion } from "framer-motion";
+import { Sun, Gamepad2, Moon, CalendarDays, UserCircle2, Sparkles } from "lucide-react";
 
 export default function Home() {
   const [isReturning, setIsReturning] = useState(false);
@@ -84,19 +86,21 @@ function FirstVisitHome() {
         />
       </div>
 
-      <InteractiveGridBox
-        className="relative z-10 nuri-message p-14"
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="relative z-10 p-14 flex flex-col items-center text-center"
         style={{
           width: "100%",
           maxWidth: 520,
           borderRadius: 40,
-          background: "linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.1) 100%)",
-          backdropFilter: "blur(40px) saturate(200%)",
-          WebkitBackdropFilter: "blur(40px) saturate(200%)",
-          border: "1px solid rgba(255, 255, 255, 0.5)",
-          boxShadow: "0 24px 64px rgba(0, 0, 0, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.8), inset 1px 0 1px rgba(255, 255, 255, 0.4)"
+          background: "rgba(255, 255, 255, 0.3)",
+          backdropFilter: "blur(32px) saturate(180%)",
+          WebkitBackdropFilter: "blur(32px) saturate(180%)",
+          border: "1px solid rgba(255, 255, 255, 0.6)",
+          boxShadow: "0 24px 64px rgba(0, 0, 0, 0.06), inset 0 2px 4px rgba(255, 255, 255, 0.8)"
         }}
-        gridSize={30}
       >
         {/* Wordmark */}
         <div className="mb-12">
@@ -105,55 +109,50 @@ function FirstVisitHome() {
             style={{
               fontSize: 72,
               lineHeight: 1,
-              color: "var(--accent-blue)",
+              color: "#5a70f3",
             }}>
             눈치
           </h1>
           <p
-            className="text-xs tracking-[0.25em] uppercase"
+            className="text-xs tracking-[0.25em] uppercase font-semibold"
             style={{ color: "var(--text-secondary)" }}>
             nunchi
           </p>
         </div>
 
-        {/* Tagline — singkat */}
+        {/* Tagline */}
         <p
-          className="text-lg font-light mb-14 leading-relaxed"
+          className="text-lg font-medium mb-14 leading-relaxed"
           style={{ color: "var(--text-secondary)" }}>
           Feel what&apos;s not said.
         </p>
 
-        {/* Dua pilihan — tidak ada penjelasan panjang */}
+        {/* Actions */}
         <div className="flex flex-col gap-3 w-full">
           <Link
             href="/therapy"
             onClick={markVisited}
-            className="w-full py-4 rounded-2xl text-white text-base font-semibold text-center transition-all hover:opacity-90 active:scale-[0.98]"
-            style={{
-              background: "linear-gradient(135deg, #5a70f3, #7c96f8)",
-              boxShadow: "0 8px 24px rgba(90,112,243,0.2)",
-            }}>
+            className="w-full py-4 rounded-2xl text-white text-base font-semibold text-center transition-all duration-300 shadow-[0_8px_24px_rgba(90,112,243,0.25)] hover:shadow-[0_16px_32px_rgba(90,112,243,0.4)] hover:-translate-y-1 active:shadow-[0_4px_12px_rgba(90,112,243,0.5)] active:translate-y-[2px] active:scale-[0.98]"
+            style={{ backgroundColor: "#5a70f3" }}
+          >
             Just feel it
           </Link>
           <Link
             href="/about"
             onClick={markVisited}
-            className="w-full py-4 rounded-2xl text-sm font-medium text-center transition-all hover:opacity-90 active:scale-[0.98] border"
-            style={{
-              borderColor: "var(--border)",
-              color: "var(--text-secondary)",
-              background: "white",
-            }}>
+            className="w-full py-4 rounded-2xl text-sm font-semibold text-center transition-all duration-300 border border-white/80 shadow-[0_4px_16px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:bg-white active:shadow-[0_2px_8px_rgba(0,0,0,0.06)] active:translate-y-[2px] active:scale-[0.98]"
+            style={{ color: "var(--text-secondary)", backgroundColor: "rgba(255, 255, 255, 0.5)" }}
+          >
             Show me how it works
           </Link>
         </div>
 
         <p
-          className="mt-8 text-xs"
-          style={{ color: "var(--text-secondary)", opacity: 0.4 }}>
+          className="mt-8 text-xs font-medium"
+          style={{ color: "var(--text-secondary)", opacity: 0.5 }}>
           No account · No sign-up · Stays on your device
         </p>
-      </InteractiveGridBox>
+      </motion.div>
     </main>
   );
 }
@@ -163,17 +162,35 @@ function FirstVisitHome() {
 // ─────────────────────────────────────
 
 const QUICK_ACTIONS = [
-  { href: "/mood", emoji: "🌅", label: "Check-in", sub: "How are you today?" },
-  { href: "/therapy", emoji: "🎮", label: "Therapy", sub: "Soundscape & game" },
-  { href: "/chat", emoji: "🌙", label: "Nuri", sub: "Talk it out" },
+  { href: "/mood", icon: Sun, label: "Check-in", sub: "How are you today?" },
+  { href: "/therapy", icon: Gamepad2, label: "Therapy", sub: "Soundscape & game" },
+  { href: "/chat", icon: Moon, label: "Nuri", sub: "Talk it out" },
   {
     href: "/planner",
-    emoji: "📅",
+    icon: CalendarDays,
     label: "Planner",
     sub: "Study with wellness",
   },
-  { href: "/profile", emoji: "◉", label: "Profile", sub: "Your nunchi report" },
+  { href: "/profile", icon: UserCircle2, label: "Profile", sub: "Your nunchi report" },
 ];
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0, scale: 0.95 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    scale: 1,
+    transition: { type: "spring", stiffness: 200, damping: 20 },
+  },
+};
 
 function ReturningHome() {
   const [greeting, setGreeting] = useState("Welcome back.");
@@ -187,88 +204,128 @@ function ReturningHome() {
 
   return (
     <main
-      className="min-h-screen flex flex-col px-5 pt-16 pb-8 relative overflow-hidden"
+      className="min-h-screen flex flex-col px-6 pt-20 pb-8 relative overflow-hidden items-center"
       style={{ background: "var(--bg-primary)" }}>
-      {/* Ambient bg */}
-      <div
-        className="fixed inset-0 pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(ellipse at 60% 20%, rgba(90,112,243,0.06) 0%, transparent 60%)",
-        }}
-      />
 
-      <div className="relative z-10 max-w-sm mx-auto w-full">
+      <div className="relative z-10 max-w-lg w-full">
         {/* Greeting */}
-        <div className="mb-10">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="mb-12"
+        >
           <p
-            className="text-3xl font-semibold"
-            style={{ color: "var(--text-primary)" }}>
+            className="text-[40px] leading-tight font-bold tracking-tight text-[#1e293b]">
             {greeting}
           </p>
           <p
-            className="text-sm mt-1.5"
+            className="text-lg mt-2 font-medium flex items-center gap-2"
             style={{ color: "var(--text-secondary)" }}>
-            Nuri is here.
+            <Sparkles size={18} className="text-[#5a70f3]" /> Nuri is here.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Quick actions — grid bebas, bukan linear flow */}
-        <div className="flex flex-col gap-3">
-          {/* Check-in — primary */}
-          <Link
-            href="/mood"
-            className="w-full flex items-center justify-between px-5 py-4 rounded-2xl text-white transition-all hover:opacity-95 active:scale-[0.99]"
-            style={{
-              background: "linear-gradient(135deg, #5a70f3, #7c96f8)",
-              boxShadow: "0 6px 20px rgba(90,112,243,0.18)",
-            }}>
-            <div>
-              <p className="font-semibold text-base">Morning check-in</p>
-              <p className="text-xs mt-0.5 opacity-75">
-                60 seconds · How are you carrying today?
-              </p>
-            </div>
-            <span className="text-2xl">🌅</span>
-          </Link>
+        {/* Quick actions Grid */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="flex flex-col gap-4"
+        >
+          {/* Primary Action - Check in */}
+          <motion.div variants={itemVariants} className="w-full">
+            <Link
+              href="/mood"
+              className="group relative w-full flex items-center justify-between p-6 rounded-[32px] text-white transition-all duration-500 hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
+              style={{
+                backgroundColor: "#5a70f3",
+                boxShadow: "0 16px 32px rgba(90,112,243,0.2), inset 0 1px 1px rgba(255,255,255,0.2)",
+              }}>
+              <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 blur-[60px] rounded-full translate-x-1/2 -translate-y-1/2 transition-transform duration-700 group-hover:scale-150"></div>
 
-          {/* Secondary actions — 2 kolom, bebas dipilih */}
-          <div className="grid grid-cols-2 gap-3">
-            {QUICK_ACTIONS.slice(1).map((action) => (
-              <Link
-                key={action.href}
-                href={action.href}
-                className="flex flex-col gap-1 px-4 py-4 rounded-2xl border transition-all hover:border-nunchi-200 hover:bg-nunchi-50/30 active:scale-[0.98]"
-                style={{
-                  borderColor: "var(--border)",
-                  background: "white",
-                }}>
-                <span className="text-2xl">{action.emoji}</span>
-                <p
-                  className="text-sm font-semibold mt-1"
-                  style={{ color: "var(--text-primary)" }}>
-                  {action.label}
+              <div className="relative z-10">
+                <p className="font-bold text-xl tracking-tight mb-1">Morning check-in</p>
+                <p className="text-sm font-medium opacity-80">
+                  60 seconds · How are you carrying today?
                 </p>
-                <p
-                  className="text-xs"
-                  style={{ color: "var(--text-secondary)" }}>
-                  {action.sub}
-                </p>
-              </Link>
-            ))}
+              </div>
+              <div className="relative z-10 w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-lg">
+                <Sun size={28} className="text-white" />
+              </div>
+            </Link>
+          </motion.div>
+
+          {/* Secondary Actions Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            {QUICK_ACTIONS.slice(1).map((action) => {
+              const Icon = action.icon;
+              return (
+                <motion.div variants={itemVariants} key={action.href}>
+                  <Link
+                    href={action.href}
+                    className="group relative flex flex-col gap-4 p-5 rounded-[28px] border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl active:scale-95 bg-white/40 backdrop-blur-xl"
+                    style={{
+                      borderColor: "rgba(255,255,255,0.6)",
+                      boxShadow: "0 8px 32px rgba(0,0,0,0.04), inset 0 1px 2px rgba(255,255,255,0.8)",
+                    }}>
+                    <div className="w-12 h-12 rounded-[16px] flex items-center justify-center transition-colors duration-300 group-hover:bg-[#5a70f3] bg-white border border-gray-100 shadow-sm group-hover:border-transparent">
+                      <Icon size={24} className="text-[#5a70f3] group-hover:text-white transition-colors duration-300" />
+                    </div>
+                    <div>
+                      <p
+                        className="text-base font-bold tracking-tight"
+                        style={{ color: "var(--text-primary)" }}>
+                        {action.label}
+                      </p>
+                      <p
+                        className="text-xs font-medium mt-1"
+                        style={{ color: "var(--text-secondary)", opacity: 0.7 }}>
+                        {action.sub}
+                      </p>
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            })}
           </div>
-        </div>
+        </motion.div>
 
         {/* Reset — tersembunyi, tidak mengganggu */}
-        <button
-          onClick={() => {
-            localStorage.removeItem("nunchi_visited");
-            window.location.reload();
-          }}
-          className="w-full text-center mt-10 text-xs"
-          style={{ color: "var(--text-secondary)", opacity: 0.25 }}>
-          Reset experience
-        </button>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 1 }}
+          className="w-full flex justify-center mt-12"
+        >
+          <motion.button
+            initial={{ borderWidth: 1 }}
+            whileHover={{
+              scale: 1.05,
+              opacity: 1,
+              backgroundColor: "rgba(90, 112, 243, 0.05)",
+              borderColor: "#5a70f3",
+              color: "#5a70f3",
+              borderWidth: 2
+            }}
+            whileTap={{
+              scale: 0.92,
+              backgroundColor: "rgba(90, 112, 243, 0.15)",
+              color: "#5a70f3",
+              borderColor: "#5a70f3",
+              borderWidth: 2,
+              boxShadow: "0 0 20px rgba(90, 112, 243, 0.4)"
+            }}
+            onClick={() => {
+              localStorage.removeItem("nunchi_visited");
+              window.location.reload();
+            }}
+            className="px-5 py-2.5 rounded-full text-xs font-semibold border transition-all duration-300"
+            style={{ color: "var(--text-secondary)", opacity: 0.5, borderColor: "var(--border)" }}>
+            Reset experience
+          </motion.button>
+        </motion.div>
       </div>
     </main>
   );
