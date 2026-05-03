@@ -56,19 +56,10 @@ export function InteractiveGridBox({
         boxShadow: style.boxShadow,
       }}
     >
-      {/* Star Border Animated Background */}
-      <div className="absolute inset-0 pointer-events-none rounded-[inherit] overflow-hidden">
-        <div 
-          className="absolute inset-[-100%] animate-spin"
-          style={{
-            animationDuration: "4s",
-            background: `conic-gradient(from 0deg, transparent 75%, ${highlightColor} 100%)`,
-          }}
-        />
-      </div>
+
 
       {/* Inner Content Container */}
-      <div 
+      <div
         className="relative h-full w-full overflow-hidden z-10"
         style={{
           borderRadius: "inherit",
@@ -112,16 +103,16 @@ export function InteractiveGridBox({
             height: spotlightSize,
             left: mousePos.x - spotlightSize / 2,
             top: mousePos.y - spotlightSize / 2,
-            background: isClicked 
-              ? `radial-gradient(circle, ${clickGlowColor} 0%, transparent 70%)` 
+            background: isClicked
+              ? `radial-gradient(circle, ${clickGlowColor} 0%, transparent 70%)`
               : `radial-gradient(circle, ${glowColor} 0%, transparent 70%)`,
             opacity: isHovering ? 1 : 0,
           }}
         />
 
         {/* Content */}
-        <div className="relative z-10 pointer-events-none">
-          <div className="pointer-events-auto h-full w-full flex flex-col items-center">
+        <div className="relative z-10 pointer-events-none w-full h-full">
+          <div className="pointer-events-auto h-full w-full flex flex-col items-center p-6 sm:p-8">
             {children}
           </div>
         </div>

@@ -170,7 +170,7 @@ export default function MoodPage() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-10 relative overflow-hidden"
+      className="min-h-screen flex flex-col items-center justify-center px-4 py-10 relative overflow-x-hidden overflow-y-auto"
       style={{ background: "var(--bg-primary)" }}
     >
       {/* Background ambient glow based on mood */}
@@ -193,7 +193,7 @@ export default function MoodPage() {
             className="w-full max-w-md"
           >
             <InteractiveGridBox
-              className="p-8 rounded-[40px] border border-white/50 shadow-[0_24px_64px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.8)]"
+              className="rounded-[40px] border border-white/50 shadow-[0_24px_64px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.8)]"
               style={{
                 background: "linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.2) 100%)",
                 backdropFilter: "blur(40px) saturate(200%)"
@@ -292,7 +292,7 @@ export default function MoodPage() {
             className="w-full max-w-md"
           >
             <InteractiveGridBox
-              className="p-8 rounded-[40px] border border-white/50 shadow-[0_24px_64px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.8)]"
+              className="rounded-[40px] border border-white/50 shadow-[0_24px_64px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.8)]"
               style={{
                 background: "linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.2) 100%)",
                 backdropFilter: "blur(40px) saturate(200%)"
@@ -394,7 +394,7 @@ export default function MoodPage() {
             className="w-full max-w-md"
           >
             <InteractiveGridBox
-              className="p-8 rounded-[40px] border border-white/50 shadow-[0_24px_64px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.8)]"
+              className="rounded-[40px] border border-white/50 shadow-[0_24px_64px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.8)]"
               style={{
                 background: "linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.2) 100%)",
                 backdropFilter: "blur(40px) saturate(200%)"
@@ -491,7 +491,7 @@ export default function MoodPage() {
             className="w-full max-w-md"
           >
             <InteractiveGridBox
-              className="p-8 rounded-[40px] border border-white/50 shadow-[0_24px_64px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.8)]"
+              className="rounded-[40px] border border-white/50 shadow-[0_24px_64px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.8)]"
               style={{
                 background: "linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.2) 100%)",
                 backdropFilter: "blur(40px) saturate(200%)"
