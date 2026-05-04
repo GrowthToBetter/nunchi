@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import BottomNav from "./components/BottomNav";
+import AuthProvider from "./components/AuthProvider";
+import LoginGateModal from "./components/LoginGateModal";
+import NuriToast from "./components/NuriToast";
 import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
 
@@ -20,11 +23,16 @@ export default function RootLayout({
   return (
     <html lang="ko" className={cn("font-sans", inter.variable)}>
       <body className="min-h-screen bg-[#fafaf8] antialiased">
-        <div className="pb-20">
-          {children}
-        </div>
-        <BottomNav />
+        <AuthProvider>
+          <div className="pb-20">
+            {children}
+          </div>
+          <BottomNav />
+          <LoginGateModal />
+          <NuriToast />
+        </AuthProvider>
       </body>
     </html>
   );
 }
+

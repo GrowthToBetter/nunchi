@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import MagicRings from "@/components/MagicRings";
 import { InteractiveGridBox } from "@/components/InteractiveGridBox";
 import { motion } from "framer-motion";
-import { Sun, Gamepad2, Moon, CalendarDays, UserCircle2, Sparkles } from "lucide-react";
+import { Sun, Gamepad2, Moon, CalendarDays, UserCircle2, Sparkles, Eye, PenLine, Timer, Map } from "lucide-react";
 
 export default function Home() {
   const [isReturning, setIsReturning] = useState(false);
@@ -165,12 +166,11 @@ const QUICK_ACTIONS = [
   { href: "/mood", icon: Sun, label: "Check-in", sub: "How are you today?" },
   { href: "/therapy", icon: Gamepad2, label: "Therapy", sub: "Soundscape & game" },
   { href: "/chat", icon: Moon, label: "Nuri", sub: "Talk it out" },
-  {
-    href: "/planner",
-    icon: CalendarDays,
-    label: "Planner",
-    sub: "Study with wellness",
-  },
+  { href: "/planner", icon: CalendarDays, label: "Planner", sub: "Study with wellness" },
+  { href: "/study", icon: Timer, label: "Study", sub: "Pomodoro & focus" },
+  { href: "/breaks", icon: Eye, label: "Breaks", sub: "Eyes, stretch, posture" },
+  { href: "/vent", icon: PenLine, label: "Vent", sub: "Write it out privately" },
+  { href: "/denah", icon: Map, label: "Denah", sub: "School floor plan", teacherOnly: true },
   { href: "/profile", icon: UserCircle2, label: "Profile", sub: "Your nunchi report" },
 ];
 
@@ -193,6 +193,8 @@ const itemVariants = {
 };
 
 function ReturningHome() {
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role;
   const [greeting, setGreeting] = useState("Welcome back.");
 
   useEffect(() => {
@@ -259,7 +261,9 @@ function ReturningHome() {
 
           {/* Secondary Actions Grid */}
           <div className="grid grid-cols-2 gap-4">
-            {QUICK_ACTIONS.slice(1).map((action) => {
+            {QUICK_ACTIONS.slice(1)
+              .filter((a) => !(a as any).teacherOnly || role === "TEACHER")
+              .map((action) => {
               const Icon = action.icon;
               return (
                 <motion.div variants={itemVariants} key={action.href}>

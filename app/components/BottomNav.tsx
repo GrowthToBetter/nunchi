@@ -2,12 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
-import { Sun, Calendar, Gamepad2, Sparkles, User } from "lucide-react";
+import { Sun, Calendar, Gamepad2, Sparkles, User, Map } from "lucide-react";
 
-const NAV = [
+type NavItem = { href: string; icon: any; label: string; teacherOnly?: boolean };
+
+const NAV: NavItem[] = [
   { href: "/mood",     icon: Sun,       label: "Check-in" },
   { href: "/planner",  icon: Calendar,  label: "Planner"  },
+  { href: "/denah",    icon: Map,       label: "Denah", teacherOnly: true },
   { href: "/therapy",  icon: Gamepad2,  label: "Therapy"  },
   { href: "/chat",     icon: Sparkles,  label: "Nuri"     },
   { href: "/profile",  icon: User,      label: "Profile"  },
@@ -15,9 +19,17 @@ const NAV = [
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role;
 
-  // Sembunyikan di onboarding & home (punya UI sendiri)
-  if (pathname === "/" || pathname === "/onboarding") return null;
+  // Hide on these pages
+  if (pathname === "/" || pathname === "/onboarding" || pathname === "/login") return null;
+
+  // Filter nav items based on role
+  const visibleNav = NAV.filter((item) => {
+    if (item.teacherOnly && role !== "TEACHER") return false;
+    return true;
+  });
 
   return (
     <div className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50">
@@ -29,7 +41,7 @@ export default function BottomNav() {
           border: "1px solid rgba(255, 255, 255, 0.6)",
         }}
       >
-        {NAV.map((item) => {
+        {visibleNav.map((item) => {
           const active = pathname.startsWith(item.href);
           const Icon = item.icon;
           return (

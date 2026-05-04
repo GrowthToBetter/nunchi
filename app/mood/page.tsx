@@ -145,6 +145,16 @@ export default function MoodPage() {
 
   const handleMoodSelect = (mood: string) => {
     setSelectedMood(mood);
+    // Store mood signal for NuriToast if mood is negative
+    const negativeMoods = ["stressed", "low", "anxious", "numb"];
+    if (negativeMoods.includes(mood)) {
+      localStorage.setItem(
+        "nunchi_mood_signal",
+        JSON.stringify({ mood, timestamp: Date.now(), dismissed: false })
+      );
+    } else {
+      localStorage.removeItem("nunchi_mood_signal");
+    }
   };
 
   const handleAnswer = (answer: string) => {
