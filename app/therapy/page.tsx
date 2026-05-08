@@ -421,7 +421,7 @@ export default function TherapyPage() {
       <div className="w-full flex justify-center py-4 px-4 z-20">
         <div className="flex gap-2 p-1.5 rounded-full bg-white/30 backdrop-blur-md shadow-sm overflow-x-auto scrollbar-hide max-w-full">
           {MODES.map((m) => {
-            const isSelected = selectedMood => selectedMode === m.id;
+            const isSelected = () => selectedMode === m.id;
             const Icon = m.icon;
             return (
               <button
