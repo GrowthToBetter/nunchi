@@ -1,611 +1,329 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Cloud, 
-  Zap, 
-  CloudRain, 
-  Leaf, 
-  Sun, 
-  Moon, 
-  Activity,
-  ArrowRight,
-  Camera,
-  CameraOff,
-  Sparkles,
-  ArrowLeft
-} from "lucide-react";
-import { InteractiveGridBox } from "@/components/InteractiveGridBox";
+import Link from "next/link";
 
-type MoodState = "intro" | "camera" | "questions" | "reflection";
-
-const MOODS = [
-  { icon: Cloud, label: "Numb", value: "numb", color: "#a5bbfc", glow: "rgba(165, 187, 252, 0.4)" },
-  { icon: Zap, label: "Stressed", value: "stressed", color: "#ffa350", glow: "rgba(255, 163, 80, 0.4)" },
-  { icon: CloudRain, label: "Low", value: "low", color: "#c7d7fe", glow: "rgba(199, 215, 254, 0.4)" },
-  { icon: Leaf, label: "Calm", value: "calm", color: "#bbf7d0", glow: "rgba(187, 247, 208, 0.4)" },
-  { icon: Sun, label: "Good", value: "good", color: "#fde68a", glow: "rgba(253, 230, 138, 0.4)" },
-  { icon: Moon, label: "Tired", value: "tired", color: "#e0e7ff", glow: "rgba(224, 231, 255, 0.4)" },
-  { icon: Activity, label: "Anxious", value: "anxious", color: "#fecaca", glow: "rgba(254, 202, 202, 0.4)" },
+const MOOD_OPTIONS = [
+  { value: "numb",     icon: <><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></>,          label: "Numb",     color: "#A5BBFC" },
+  { value: "stressed", icon: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>,               label: "Stressed", color: "#FFA350" },
+  { value: "low",      icon: <><path d="M9.59 4.59A2 2 0 1 1 11 8H2"/><path d="M17.73 2.27A2.5 2.5 0 1 1 19.5 6.5H2"/><path d="M14.85 17.85A3 3 0 1 0 17 13H2"/></>, label: "Low", color: "#C7D7FE" },
+  { value: "calm",     icon: <><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19.2 2.96c1.4 9.3-3.6 12.5-8.2 14.04"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></>, label: "Calm", color: "#BBF7D0" },
+  { value: "good",     icon: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></>, label: "Good", color: "#FDE68A" },
+  { value: "tired",    icon: <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>,              label: "Tired",    color: "#E0E7FF" },
+  { value: "anxious",  icon: <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>,                     label: "Anxious",  color: "#FECACA" },
 ];
 
 const QUESTIONS: Record<string, { q: string; options: string[] }[]> = {
   stressed: [
-    {
-      q: "When you feel this way, what do you usually do?",
-      options: ["Push through it", "Take a break", "Talk to someone", "Ignore it"],
-    },
-    {
-      q: "What would help most right now?",
-      options: ["Music", "Silence", "Moving around", "Just breathing"],
-    },
-    {
-      q: "How long have you been feeling like this?",
-      options: ["Just today", "A few days", "A week or more", "Not sure"],
-    },
+    { q: "When you feel this way, what do you usually do?", options: ["Push through it","Take a break","Talk to someone","Ignore it"] },
+    { q: "What would help most right now?", options: ["Music","Silence","Moving around","Just breathing"] },
+    { q: "How long have you been feeling like this?", options: ["Just today","A few days","A week or more","Not sure"] },
   ],
   low: [
-    {
-      q: "Is there something specific weighing on you?",
-      options: ["School pressure", "Social tension", "Home situation", "I'm not sure"],
-    },
-    {
-      q: "Have you eaten or rested well today?",
-      options: ["Yes, both", "Ate, not rested", "Rested, didn't eat", "Neither"],
-    },
-    {
-      q: "What do you wish someone would say to you right now?",
-      options: [
-        "It's okay to struggle",
-        "You're doing enough",
-        "Take a rest",
-        "Nothing — just be here",
-      ],
-    },
+    { q: "Is there something specific weighing on you?", options: ["School pressure","Social tension","Home situation","I'm not sure"] },
+    { q: "Have you eaten or rested well today?", options: ["Yes, both","Ate, not rested","Rested, didn't eat","Neither"] },
+    { q: "What do you wish someone would say to you right now?", options: ["It's okay to struggle","You're doing enough","Take a rest","Nothing — just be here"] },
   ],
   default: [
-    {
-      q: "What's the biggest thing on your mind today?",
-      options: ["Upcoming exam", "A friendship", "My own thoughts", "Something at home"],
-    },
-    {
-      q: "How did you sleep last night?",
-      options: ["Really well", "Okay", "Not great", "Barely at all"],
-    },
-    {
-      q: "What energy best describes today so far?",
-      options: ["Starting strong", "Getting by", "Dragging along", "On autopilot"],
-    },
+    { q: "What's the biggest thing on your mind today?", options: ["Upcoming exam","A friendship","My own thoughts","Something at home"] },
+    { q: "How did you sleep last night?", options: ["Really well","Okay","Not great","Barely at all"] },
+    { q: "What energy best describes today so far?", options: ["Starting strong","Getting by","Dragging along","On autopilot"] },
   ],
 };
 
 const REFLECTIONS: Record<string, string> = {
-  stressed:
-    "You're carrying something heavy today. That's real. Nuri sees that — and it's okay to set some of it down, even for an hour.",
-  low:
-    "Some days the weight shows up without a reason. You don't have to understand it to be gentle with yourself today.",
-  numb:
-    "Feeling nothing is still feeling something. Nuri will stay close today — no pressure, no questions.",
-  anxious:
-    "Your nervous system is working overtime. Let's find one small thing that can slow it down, even briefly.",
-  tired:
-    "Rest is not laziness. Your body is sending you a message. Today, we keep things light.",
-  calm:
-    "A steady day is a good foundation. Nuri will help you use that calm energy wisely.",
-  good:
-    "Hold onto this. Even on good days, checking in matters — it helps Nuri understand your full picture.",
-  default:
-    "Thanks for showing up. Nuri noticed. Let's move through today together.",
+  stressed: "You're carrying something heavy today. That's real. Nuri sees that — and it's okay to set some of it down, even for an hour.",
+  low:      "Some days the weight shows up without a reason. You don't have to understand it to be gentle with yourself today.",
+  numb:     "Feeling nothing is still feeling something. Nuri will stay close today — no pressure, no questions.",
+  anxious:  "Your nervous system is working overtime. Let's find one small thing that can slow it down, even briefly.",
+  tired:    "Rest is not laziness. Your body is sending you a message. Today, we keep things light.",
+  calm:     "A steady day is a good foundation. Nuri will help you use that calm energy wisely.",
+  good:     "Hold onto this. Even on good days, checking in matters — it helps Nuri understand your full picture.",
+  default:  "Thanks for showing up. Nuri noticed. Let's move through today together.",
 };
 
-const pageVariants = {
-  initial: { opacity: 0, y: 15, scale: 0.98 },
-  animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: "easeOut" } },
-  exit: { opacity: 0, y: -15, scale: 0.98, transition: { duration: 0.3, ease: "easeIn" } }
-};
+function MoodIcon({ path, color, size = 22, strokeWidth = 1.75 }: { path: React.ReactNode; color: string; size?: number; strokeWidth?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
+      strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      {path}
+    </svg>
+  );
+}
+
+function getGreetingKey() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
 
 export default function MoodPage() {
-  const [step, setStep] = useState<MoodState>("intro");
-  const [selectedMood, setSelectedMood] = useState<string | null>(null);
-  const [cameraActive, setCameraActive] = useState(false);
-  const [currentQ, setCurrentQ] = useState(0);
+  const [step, setStep] = useState<"intro"|"camera"|"questions"|"reflection">("intro");
+  const [mood, setMood] = useState<string|null>(null);
+  const [cameraOn, setCameraOn] = useState(false);
+  const [qIdx, setQIdx] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [skipped, setSkipped] = useState(false);
-  
   const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const streamRef = useRef<MediaStream|null>(null);
 
-  const moodObj = MOODS.find((m) => m.value === selectedMood);
-  const questions = QUESTIONS[selectedMood ?? ""] ?? QUESTIONS.default;
+  const moodObj = MOOD_OPTIONS.find(m => m.value === mood);
+  const questions = QUESTIONS[mood ?? ""] ?? QUESTIONS.default;
 
-  const startCamera = async () => {
+  const stopCam = () => {
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
+    setCameraOn(false);
+  };
+
+  const startCam = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      streamRef.current = stream;
-      if (videoRef.current) videoRef.current.srcObject = stream;
-      setCameraActive(true);
-    } catch {
-      skipCamera();
-    }
+      const s = await navigator.mediaDevices.getUserMedia({ video: true });
+      streamRef.current = s;
+      if (videoRef.current) videoRef.current.srcObject = s;
+      setCameraOn(true);
+    } catch { setStep("questions"); }
   };
 
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-    }
-    setCameraActive(false);
-  };
+  useEffect(() => () => stopCam(), []);
 
-  const skipCamera = () => {
-    stopCamera();
-    setStep("questions");
-  };
-
-  const handleMoodSelect = (mood: string) => {
-    setSelectedMood(mood);
-    // Store mood signal for NuriToast if mood is negative
-    const negativeMoods = ["stressed", "low", "anxious", "numb"];
-    if (negativeMoods.includes(mood)) {
-      localStorage.setItem(
-        "nunchi_mood_signal",
-        JSON.stringify({ mood, timestamp: Date.now(), dismissed: false })
-      );
+  const pickMood = (v: string) => {
+    setMood(v);
+    const neg = ["stressed","low","anxious","numb"];
+    if (neg.includes(v)) {
+      localStorage.setItem("nunchi_mood_signal", JSON.stringify({ mood: v, timestamp: Date.now(), dismissed: false }));
     } else {
       localStorage.removeItem("nunchi_mood_signal");
     }
   };
 
-  const handleAnswer = (answer: string) => {
-    const next = [...answers, answer];
+  const answer = (a: string) => {
+    const next = [...answers, a];
     setAnswers(next);
-    if (currentQ + 1 < questions.length) {
-      setCurrentQ((q) => q + 1);
-    } else {
-      stopCamera();
-      setStep("reflection");
-    }
+    if (qIdx + 1 < questions.length) setQIdx(qIdx + 1);
+    else { stopCam(); setStep("reflection"); }
   };
 
-  const handleSkipAll = () => {
-    setSkipped(true);
-    stopCamera();
-    setStep("reflection");
-  };
-
-  useEffect(() => {
-    return () => stopCamera();
-  }, []);
+  const bg = moodObj ? moodObj.color + "22" : "var(--bg)";
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-10 relative overflow-x-hidden overflow-y-auto"
-      style={{ background: "var(--bg-primary)" }}
-    >
-      {/* Background ambient glow based on mood */}
-      <motion.div 
-        className="absolute inset-0 pointer-events-none opacity-40 transition-colors duration-1000"
-        style={{
-          backgroundColor: moodObj ? moodObj.glow : "rgba(90, 112, 243, 0.05)"
-        }}
-      />
+    <div style={{
+      minHeight: "100vh", padding: "32px 20px 80px",
+      background: `linear-gradient(180deg, ${bg} 0%, var(--bg) 60%)`,
+      transition: "background 800ms",
+    }}>
+      <div style={{ maxWidth: 520, margin: "0 auto" }}>
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+          <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--ink-3)" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Back
+          </Link>
+          <div className="eyebrow">Morning Check-in</div>
+          <div style={{ width: 40 }}/>
+        </div>
 
-      <AnimatePresence mode="wait">
         {/* INTRO */}
         {step === "intro" && (
-          <motion.div
-            key="intro"
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="w-full max-w-md"
-          >
-            <InteractiveGridBox
-              className="rounded-[40px] border border-white/50 shadow-[0_24px_64px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.8)]"
-              style={{
-                background: "linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.2) 100%)",
-                backdropFilter: "blur(40px) saturate(200%)"
-              }}
-              highlightColor={moodObj?.glow}
-              glowColor={moodObj?.glow ? moodObj.glow.replace(", 0.4)", ", 0.05)") : undefined}
-              clickGlowColor={moodObj?.glow ? moodObj.glow.replace(", 0.4)", ", 0.15)") : undefined}
-            >
-              <div className="text-center mb-8">
-                <p className="text-xs tracking-widest uppercase text-[var(--text-secondary)] mb-2 font-medium">
-                  Good morning
-                </p>
-                <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
-                  How are you, really?
-                </h1>
-                <p className="text-sm text-[var(--text-secondary)] mt-2">
-                  60 seconds. No judgment. Just a check-in.
-                </p>
-              </div>
+          <div className="nuri-pop nch-card" style={{ padding: 32, borderRadius: 28, boxShadow: "var(--sh-3)" }}>
+            <div style={{ textAlign: "center", marginBottom: 28 }}>
+              <div className="eyebrow" style={{ marginBottom: 8 }}>{getGreetingKey()}</div>
+              <h2 className="nch-serif" style={{ fontSize: 30, fontStyle: "italic", lineHeight: 1.2, marginBottom: 8 }}>
+                How are you, really?
+              </h2>
+              <p style={{ fontSize: 13, color: "var(--ink-3)" }}>60 seconds. No judgment. Just a check-in.</p>
+            </div>
 
-              {/* Mood picker grid */}
-              <div className="grid grid-cols-4 gap-3 mb-8 w-full px-2">
-                {MOODS.map((m) => {
-                  const isSelected = selectedMood === m.value;
-                  const Icon = m.icon;
-                  return (
-                    <motion.button
-                      key={m.value}
-                      onClick={() => handleMoodSelect(m.value)}
-                      className="group flex flex-col items-center gap-2 p-4 rounded-3xl relative overflow-hidden"
-                      animate={{
-                        background: isSelected ? "rgba(255, 255, 255, 0.9)" : "rgba(255, 255, 255, 0.4)",
-                        borderColor: isSelected ? m.color : "rgba(255, 255, 255, 0.6)",
-                        boxShadow: isSelected ? `0 8px 24px ${m.glow}` : "0 2px 8px rgba(0,0,0,0.02)",
-                        y: isSelected ? -4 : 0
-                      }}
-                      whileHover={!isSelected ? {
-                        y: -2,
-                        background: "rgba(255, 255, 255, 0.6)",
-                        boxShadow: `0 8px 20px ${m.glow}`
-                      } : {}}
-                      whileTap={{ scale: 0.96 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                      style={{ borderWidth: 1, borderStyle: "solid" }}
-                    >
-                      <div 
-                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                        style={{ backgroundColor: m.glow }}
-                      />
-                      <Icon 
-                        size={28} 
-                        strokeWidth={isSelected ? 2.5 : 1.5}
-                        style={{ color: isSelected ? m.color : "var(--text-secondary)", transition: "all 0.3s ease" }} 
-                      />
-                      <span className={`text-[11px] font-medium transition-colors ${isSelected ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]"}`}>
-                        {m.label}
-                      </span>
-                    </motion.button>
-                  );
-                })}
-              </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 28 }}>
+              {MOOD_OPTIONS.map(m => {
+                const sel = mood === m.value;
+                return (
+                  <button key={m.value} onClick={() => pickMood(m.value)} style={{
+                    padding: 14, borderRadius: 18,
+                    background: sel ? "var(--surface)" : "var(--surface-2)",
+                    border: `1.5px solid ${sel ? m.color : "var(--border)"}`,
+                    boxShadow: sel ? `0 8px 24px ${m.color}40` : "none",
+                    transform: sel ? "translateY(-2px)" : "none",
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+                    transition: "var(--t-fast)",
+                  }}>
+                    <MoodIcon path={m.icon} color={sel ? m.color : "var(--ink-3)"} strokeWidth={sel ? 2.2 : 1.6}/>
+                    <span style={{ fontSize: 10, color: sel ? "var(--ink)" : "var(--ink-3)", fontWeight: 500 }}>{m.label}</span>
+                  </button>
+                );
+              })}
+            </div>
 
-              <div className="w-full flex flex-col items-center space-y-4">
-                <motion.button
-                  disabled={!selectedMood}
-                  onClick={() => setStep("camera")}
-                  className="w-full py-4 rounded-3xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-                  whileHover={selectedMood ? { y: -2, boxShadow: `inset 0 1px 1px rgba(255,255,255,0.6), 0 12px 32px ${moodObj?.glow}` } : {}}
-                  whileTap={selectedMood ? { scale: 0.98 } : {}}
-                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                  style={{ 
-                    backgroundImage: selectedMood ? "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%)" : "none",
-                    backgroundColor: selectedMood ? (moodObj?.color || "#5a70f3") : "var(--border)",
-                    color: selectedMood ? "#1a1a1a" : "var(--text-secondary)",
-                    boxShadow: selectedMood ? `inset 0 1px 1px rgba(255,255,255,0.5), 0 8px 24px ${moodObj?.glow}` : "none"
-                  }}
-                >
-                  Continue <ArrowRight size={16} />
-                </motion.button>
-                <p className="text-[11px] text-[var(--text-secondary)] font-medium flex items-center gap-1 opacity-60">
-                  <Sparkles size={12} /> Nuri won't share this with anyone.
-                </p>
-              </div>
-            </InteractiveGridBox>
-          </motion.div>
+            <button disabled={!mood} onClick={() => setStep("camera")} style={{
+              width: "100%", padding: "16px 24px", borderRadius: 16, fontSize: 15, fontWeight: 600,
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              background: mood ? moodObj!.color : "var(--border)",
+              color: mood ? "#1a1a1a" : "var(--ink-3)",
+              boxShadow: mood ? `0 8px 24px ${moodObj!.color}50` : "none",
+              opacity: mood ? 1 : 0.6, transition: "var(--t-fast)",
+            }}>
+              Continue
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+            <div style={{ textAlign: "center", fontSize: 11, color: "var(--ink-3)", marginTop: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9.94 14.06 8 19l-1.94-4.94L1 12.13l4.95-1.94L8 5l1.94 4.95L15 12l-5.06 2.06z"/></svg>
+              Nuri won&apos;t share this with anyone.
+            </div>
+          </div>
         )}
 
         {/* CAMERA */}
         {step === "camera" && (
-          <motion.div
-            key="camera"
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="w-full max-w-md"
-          >
-            <InteractiveGridBox
-              className="rounded-[40px] border border-white/50 shadow-[0_24px_64px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.8)]"
-              style={{
-                background: "linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.2) 100%)",
-                backdropFilter: "blur(40px) saturate(200%)"
-              }}
-              highlightColor={moodObj?.glow}
-              glowColor={moodObj?.glow ? moodObj.glow.replace(", 0.4)", ", 0.05)") : undefined}
-              clickGlowColor={moodObj?.glow ? moodObj.glow.replace(", 0.4)", ", 0.15)") : undefined}
-            >
-              <div className="flex justify-center mb-8">
-                <div
-                  className="relative rounded-full overflow-hidden flex items-center justify-center shadow-inner transition-all duration-500"
-                  style={{
-                    width: 180,
-                    height: 180,
-                    background: "rgba(255, 255, 255, 0.5)",
-                    border: `4px solid ${moodObj?.color ?? "var(--border)"}`,
-                    boxShadow: `0 0 40px ${moodObj?.glow}`
-                  }}
-                >
-                  {cameraActive ? (
-                    <video
-                      ref={videoRef}
-                      autoPlay
-                      playsInline
-                      muted
-                      className="w-full h-full object-cover scale-x-[-1]"
-                    />
-                  ) : (
-                    moodObj ? <moodObj.icon size={64} color={moodObj.color} strokeWidth={1.5} /> : <Camera size={64} color="var(--text-secondary)" strokeWidth={1.5} />
-                  )}
-                </div>
+          <div className="nuri-pop nch-card" style={{ padding: 32, borderRadius: 28, boxShadow: "var(--sh-3)" }}>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
+              <div style={{
+                width: 180, height: 180, borderRadius: "50%",
+                background: "var(--surface-2)",
+                border: `4px solid ${moodObj?.color || "var(--border)"}`,
+                display: "grid", placeItems: "center", overflow: "hidden",
+                boxShadow: `0 0 40px ${moodObj?.color || "transparent"}40`,
+              }}>
+                {cameraOn
+                  ? <video ref={videoRef} autoPlay playsInline muted style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scaleX(-1)" }}/>
+                  : <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke={moodObj?.color || "var(--ink-3)"} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                }
               </div>
-
-              <div className="text-center mb-8">
-                <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
-                  Optional: Let Nuri see you
-                </h2>
-                <p className="text-sm text-[var(--text-secondary)] leading-relaxed px-4">
-                  Using your camera allows Nuri to read subtle facial cues locally. No data leaves your device.
-                </p>
-              </div>
-
-              <div className="space-y-3 w-full">
-                {!cameraActive ? (
-                  <motion.button
-                    onClick={startCamera}
-                    className="w-full py-4 rounded-3xl text-sm font-semibold flex items-center justify-center gap-2"
-                    whileHover={{ y: -2, boxShadow: `inset 0 1px 1px rgba(255,255,255,0.6), 0 12px 32px ${moodObj?.glow}` }}
-                    whileTap={{ scale: 0.98 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                    style={{ 
-                      backgroundImage: "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%)",
-                      backgroundColor: moodObj?.color || "#5a70f3",
-                      color: "#1a1a1a",
-                      boxShadow: `inset 0 1px 1px rgba(255,255,255,0.5), 0 8px 24px ${moodObj?.glow}`
-                    }}
-                  >
-                    <Camera size={18} /> Allow Camera
-                  </motion.button>
-                ) : (
-                  <motion.button
-                    onClick={() => setStep("questions")}
-                    className="w-full py-4 rounded-3xl text-sm font-semibold flex items-center justify-center gap-2"
-                    whileHover={{ y: -2, boxShadow: `inset 0 1px 1px rgba(255,255,255,0.6), 0 12px 32px ${moodObj?.glow}` }}
-                    whileTap={{ scale: 0.98 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                    style={{ 
-                      backgroundImage: "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%)",
-                      backgroundColor: moodObj?.color || "#5a70f3",
-                      color: "#1a1a1a",
-                      boxShadow: `inset 0 1px 1px rgba(255,255,255,0.5), 0 8px 24px ${moodObj?.glow}`
-                    }}
-                  >
-                    Looks good, continue <ArrowRight size={18} />
-                  </motion.button>
-                )}
-                <motion.button
-                  onClick={skipCamera}
-                  className="w-full py-3 rounded-3xl text-sm font-medium text-[var(--text-secondary)] flex items-center justify-center gap-2 bg-white/40 border border-white/40"
-                  whileHover={{ y: -2, backgroundColor: "rgba(255,255,255,0.6)", boxShadow: "0 8px 24px rgba(0,0,0,0.05)" }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                >
-                  <CameraOff size={16} /> Skip camera
-                </motion.button>
-              </div>
-            </InteractiveGridBox>
-          </motion.div>
+            </div>
+            <div style={{ textAlign: "center", marginBottom: 24 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>Optional: Let Nuri see you</h3>
+              <p style={{ fontSize: 12, color: "var(--ink-3)", lineHeight: 1.5 }}>
+                Using your camera allows Nuri to read subtle facial cues locally. <strong>No data leaves your device.</strong>
+              </p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {!cameraOn
+                ? <button onClick={startCam} style={{
+                    padding: "16px 20px", borderRadius: 16, fontWeight: 600, fontSize: 14,
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    background: moodObj?.color, color: "#1a1a1a",
+                    boxShadow: `0 8px 24px ${moodObj?.color}50`,
+                  }}>Allow Camera</button>
+                : <button onClick={() => setStep("questions")} style={{
+                    padding: "16px 20px", borderRadius: 16, fontWeight: 600, fontSize: 14,
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    background: moodObj?.color, color: "#1a1a1a",
+                  }}>Looks good, continue</button>
+              }
+              <button onClick={() => { stopCam(); setStep("questions"); }} style={{
+                padding: "14px 20px", borderRadius: 14, fontWeight: 600, fontSize: 14,
+                background: "var(--surface)", color: "var(--ink)",
+                border: "1px solid var(--border-strong)",
+              }}>Skip camera</button>
+            </div>
+          </div>
         )}
 
         {/* QUESTIONS */}
         {step === "questions" && (
-          <motion.div
-            key="questions"
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="w-full max-w-md"
-          >
-            <InteractiveGridBox
-              className="rounded-[40px] border border-white/50 shadow-[0_24px_64px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.8)]"
-              style={{
-                background: "linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.2) 100%)",
-                backdropFilter: "blur(40px) saturate(200%)"
-              }}
-              highlightColor={moodObj?.glow}
-              glowColor={moodObj?.glow ? moodObj.glow.replace(", 0.4)", ", 0.05)") : undefined}
-              clickGlowColor={moodObj?.glow ? moodObj.glow.replace(", 0.4)", ", 0.15)") : undefined}
-            >
-              {/* Progress */}
-              <div className="flex gap-2 mb-8">
-                {questions.map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-1.5 flex-1 rounded-full transition-all duration-500"
-                    style={{
-                      background: i <= currentQ ? moodObj?.color ?? "var(--accent-blue)" : "rgba(0,0,0,0.05)",
-                      boxShadow: i === currentQ ? `0 0 8px ${moodObj?.glow}` : "none"
-                    }}
-                  />
-                ))}
-              </div>
-
-              <div className="relative min-h-[280px]">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentQ}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                    className="w-full"
-                  >
-                    <div className="mb-8">
-                      <p className="text-xs uppercase tracking-widest text-[var(--text-secondary)] mb-2 font-medium">
-                        Question {currentQ + 1} of {questions.length}
-                      </p>
-                      <h2 className="text-2xl font-semibold text-[var(--text-primary)] leading-snug">
-                        {questions[currentQ].q}
-                      </h2>
-                    </div>
-
-                    <div className="space-y-3 w-full mb-6">
-                      {questions[currentQ].options.map((opt) => (
-                        <motion.button
-                          key={opt}
-                          onClick={() => handleAnswer(opt)}
-                          className="group w-full text-left px-5 py-4 rounded-3xl border border-white/60 bg-white/50 text-sm font-medium text-[var(--text-primary)] flex items-center justify-between"
-                          whileHover={{ 
-                            backgroundColor: "rgba(255,255,255,1)",
-                            borderColor: moodObj?.color ?? "var(--accent-blue)",
-                            boxShadow: `0 8px 20px ${moodObj?.glow ?? "rgba(90, 112, 243, 0.15)"}`,
-                            scale: 1.01,
-                            y: -2
-                          }}
-                          whileTap={{ scale: 0.98 }}
-                          transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                          style={{
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.02)"
-                          }}
-                        >
-                          <span>{opt}</span>
-                          <ArrowRight 
-                            size={16} 
-                            className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" 
-                            style={{ color: moodObj?.color ?? "var(--accent-blue)" }}
-                          />
-                        </motion.button>
-                      ))}
-                    </div>
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-
-              <div className="flex justify-center w-full">
-                <button
-                  onClick={handleSkipAll}
-                  className="text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors py-2 px-4 rounded-full bg-white/30 hover:bg-white/50 border border-transparent hover:border-white/50"
-                >
-                  Skip all questions
+          <div className="nuri-pop nch-card" style={{ padding: 32, borderRadius: 28, boxShadow: "var(--sh-3)" }}>
+            <div style={{ display: "flex", gap: 6, marginBottom: 24 }}>
+              {questions.map((_, i) => (
+                <div key={i} style={{
+                  height: 4, flex: 1, borderRadius: 999,
+                  background: i <= qIdx ? (moodObj?.color || "var(--accent)") : "var(--bg-2)",
+                  boxShadow: i === qIdx ? `0 0 12px ${moodObj?.color || "var(--accent)"}` : "none",
+                  transition: "var(--t-med)",
+                }}/>
+              ))}
+            </div>
+            <div className="eyebrow" style={{ marginBottom: 8 }}>Question {qIdx + 1} of {questions.length}</div>
+            <h3 className="nch-serif" style={{ fontSize: 24, fontStyle: "italic", lineHeight: 1.3, marginBottom: 24 }}>
+              {questions[qIdx].q}
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {questions[qIdx].options.map(opt => (
+                <button key={opt} onClick={() => answer(opt)} style={{
+                  padding: "16px 20px", borderRadius: 16,
+                  background: "var(--surface-2)", border: "1px solid var(--border)",
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  fontSize: 14, color: "var(--ink)", textAlign: "left",
+                  transition: "var(--t-fast)",
+                }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--surface)"; (e.currentTarget as HTMLElement).style.borderColor = moodObj?.color || "var(--accent)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "var(--surface-2)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; (e.currentTarget as HTMLElement).style.transform = ""; }}>
+                  <span>{opt}</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={moodObj?.color || "var(--accent)"} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </button>
-              </div>
-            </InteractiveGridBox>
-          </motion.div>
+              ))}
+            </div>
+            <div style={{ textAlign: "center", marginTop: 20 }}>
+              <button onClick={() => { setSkipped(true); stopCam(); setStep("reflection"); }} style={{ fontSize: 11, color: "var(--ink-3)", padding: "6px 14px", borderRadius: 999, border: "1px solid var(--border)" }}>
+                Skip all questions
+              </button>
+            </div>
+          </div>
         )}
 
         {/* REFLECTION */}
-        {step === "reflection" && (
-          <motion.div
-            key="reflection"
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="w-full max-w-md"
-          >
-            <InteractiveGridBox
-              className="rounded-[40px] border border-white/50 shadow-[0_24px_64px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.8)]"
-              style={{
-                background: "linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.2) 100%)",
-                backdropFilter: "blur(40px) saturate(200%)"
-              }}
-              highlightColor={moodObj?.glow}
-              glowColor={moodObj?.glow ? moodObj.glow.replace(", 0.4)", ", 0.05)") : undefined}
-              clickGlowColor={moodObj?.glow ? moodObj.glow.replace(", 0.4)", ", 0.15)") : undefined}
-            >
-              <div className="flex flex-col items-center w-full">
-                {/* Nuri bubble */}
-                <div
-                  className="w-20 h-20 rounded-[24px] flex items-center justify-center mb-8"
-                  style={{ 
-                    backgroundImage: "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%)",
-                    backgroundColor: moodObj?.color ?? "#e0e9ff",
-                    boxShadow: `0 12px 32px ${moodObj?.glow ?? "rgba(90,112,243,0.2)"}, inset 0 1px 2px rgba(255,255,255,0.8)`
-                  }}
-                >
-                  {moodObj ? <moodObj.icon size={36} color="#1a1a1a" strokeWidth={2} /> : <Sparkles size={36} color="#5a70f3" />}
-                </div>
+        {step === "reflection" && moodObj && (
+          <div className="nuri-pop nch-card" style={{ padding: 32, borderRadius: 28, boxShadow: "var(--sh-3)" }}>
+            <div style={{
+              width: 76, height: 76, borderRadius: 22,
+              background: moodObj.color,
+              display: "grid", placeItems: "center",
+              margin: "0 auto 24px",
+              boxShadow: `0 12px 32px ${moodObj.color}80`,
+            }}>
+              <MoodIcon path={moodObj.icon} color="#1a1a1a" size={36} strokeWidth={2}/>
+            </div>
 
-                <div
-                  className="w-full p-6 rounded-3xl text-left mb-6 border border-white/60 relative overflow-hidden"
-                  style={{ background: "rgba(255, 255, 255, 0.6)" }}
-                >
-                  <div className="absolute top-0 left-0 w-1 h-full" style={{ background: moodObj?.color ?? "var(--accent-blue)" }} />
-                  <p className="text-xs uppercase tracking-widest text-[var(--text-secondary)] mb-3 font-medium flex items-center gap-1">
-                    <Sparkles size={12} /> Nuri says
-                  </p>
-                  <p className="text-[15px] font-medium text-[var(--text-primary)] leading-relaxed">
-                    {REFLECTIONS[selectedMood ?? ""] ?? REFLECTIONS.default}
-                  </p>
-                </div>
+            <div className="nch-card-soft" style={{
+              padding: 20, marginBottom: 16,
+              borderLeft: `3px solid ${moodObj.color}`,
+              borderRadius: "0 14px 14px 0",
+            }}>
+              <div className="eyebrow" style={{ marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M9.94 14.06 8 19l-1.94-4.94L1 12.13l4.95-1.94L8 5l1.94 4.95L15 12l-5.06 2.06z"/></svg>
+                Nuri says
+              </div>
+              <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--ink)" }}>{REFLECTIONS[mood!] || REFLECTIONS.default}</p>
+            </div>
 
-                {!skipped && answers.length > 0 && (
-                  <div className="w-full space-y-2 text-left mb-6">
-                    <p className="text-xs text-[var(--text-secondary)] uppercase tracking-widest font-medium pl-1">
-                      Your reflections
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {answers.map((a, i) => (
-                         <div
-                           key={i}
-                           className="px-4 py-2 rounded-2xl text-sm font-medium text-[var(--text-primary)] bg-white/50 border border-white/80 shadow-[0_2px_8px_rgba(0,0,0,0.02)]"
-                         >
-                           {a}
-                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Recommended study method hint */}
-                <div
-                  className="w-full p-5 rounded-3xl border border-white/60 text-left mb-8"
-                  style={{ 
-                    backgroundImage: "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%)",
-                    backgroundColor: moodObj?.glow ?? "rgba(90,112,243,0.1)",
-                    boxShadow: "inset 0 1px 1px rgba(255,255,255,0.4)"
-                  }}
-                >
-                  <p className="text-xs text-[var(--text-primary)] font-semibold mb-2 uppercase tracking-widest">
-                    Study Suggestion
-                  </p>
-                  <p className="text-sm text-[var(--text-primary)] font-medium leading-relaxed">
-                    {selectedMood === "stressed" || selectedMood === "anxious"
-                      ? "Pomodoro — short bursts with clear breaks will help your nervous system stay regulated."
-                      : selectedMood === "low" || selectedMood === "numb"
-                      ? "Feynman — explaining topics out loud can gently reconnect your focus."
-                      : "Spaced Repetition — you're in a good state to consolidate knowledge today."}
-                  </p>
-                </div>
-
-                <div className="flex gap-3 w-full">
-                  <motion.a
-                    href="/planner"
-                    className="flex-1 py-4 rounded-3xl text-center text-sm font-semibold block"
-                    whileHover={{ y: -2, boxShadow: `inset 0 1px 1px rgba(255,255,255,0.6), 0 12px 32px ${moodObj?.glow ?? "rgba(90,112,243,0.3)"}` }}
-                    whileTap={{ scale: 0.98 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                    style={{ 
-                      backgroundImage: "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%)",
-                      backgroundColor: moodObj?.color ?? "#5a70f3",
-                      color: "#1a1a1a",
-                      boxShadow: `inset 0 1px 1px rgba(255,255,255,0.5), 0 8px 24px ${moodObj?.glow ?? "rgba(90,112,243,0.3)"}`
-                    }}
-                  >
-                    Start studying
-                  </motion.a>
-                  <motion.a
-                    href="/therapy"
-                    className="flex-1 py-4 rounded-3xl text-center text-sm font-semibold bg-white/50 border border-white/80 text-[var(--text-primary)] block"
-                    whileHover={{ y: -2, backgroundColor: "rgba(255,255,255,0.8)", boxShadow: "0 8px 24px rgba(0,0,0,0.05)" }}
-                    whileTap={{ scale: 0.98 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                  >
-                    Open soundscape
-                  </motion.a>
+            {!skipped && answers.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <div className="eyebrow" style={{ marginBottom: 8 }}>Your reflections</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {answers.map((a, i) => (
+                    <span key={i} style={{ padding: "6px 12px", borderRadius: 999, background: "var(--surface-2)", border: "1px solid var(--border)", fontSize: 12, color: "var(--ink-2)" }}>{a}</span>
+                  ))}
                 </div>
               </div>
-            </InteractiveGridBox>
-          </motion.div>
+            )}
+
+            <div style={{ padding: 18, borderRadius: 16, background: moodObj.color + "20", marginBottom: 20 }}>
+              <div className="eyebrow" style={{ marginBottom: 6 }}>Study Suggestion</div>
+              <p style={{ fontSize: 13, lineHeight: 1.6, color: "var(--ink)" }}>
+                {mood === "stressed" || mood === "anxious"
+                  ? "Pomodoro — short bursts with clear breaks will help your nervous system stay regulated."
+                  : mood === "low" || mood === "numb"
+                    ? "Feynman — explaining topics out loud can gently reconnect your focus."
+                    : "Spaced Repetition — you're in a good state to consolidate knowledge today."}
+              </p>
+            </div>
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <Link href="/planner" style={{
+                flex: 1, padding: "16px 20px", borderRadius: 16, fontWeight: 600, fontSize: 14,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: moodObj.color, color: "#1a1a1a",
+                boxShadow: `0 8px 24px ${moodObj.color}50`, textDecoration: "none",
+              }}>Start studying</Link>
+              <Link href="/therapy" style={{
+                flex: 1, padding: "16px 20px", borderRadius: 16, fontWeight: 600, fontSize: 14,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: "var(--surface)", color: "var(--ink)",
+                border: "1px solid var(--border-strong)", textDecoration: "none",
+              }}>Soundscape</Link>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 }

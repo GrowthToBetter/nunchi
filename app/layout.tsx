@@ -4,10 +4,6 @@ import BottomNav from "./components/BottomNav";
 import AuthProvider from "./components/AuthProvider";
 import LoginGateModal from "./components/LoginGateModal";
 import NuriToast from "./components/NuriToast";
-import { Inter } from "next/font/google";
-import { cn } from "@/lib/utils";
-
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: "Nunchi (눈치) — Feel What's Not Said",
@@ -21,8 +17,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={cn("font-sans", inter.variable)}>
-      <body className="min-h-screen bg-[#fafaf8] antialiased">
+    <html lang="ko">
+      <body>
         <AuthProvider>
           <div className="pb-20">
             {children}
@@ -35,4 +31,3 @@ export default function RootLayout({
     </html>
   );
 }
-

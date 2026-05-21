@@ -3,11 +3,53 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import MagicRings from "@/components/MagicRings";
-import { InteractiveGridBox } from "@/components/InteractiveGridBox";
-import { motion } from "framer-motion";
-import { Sun, Gamepad2, Moon, CalendarDays, UserCircle2, Sparkles, Eye, PenLine, Timer, Map } from "lucide-react";
 
+// ─── Icons (inline SVG, Lucide-style) ───────────────────────
+function IcoSun() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>;
+}
+function IcoSparkles() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M9.94 14.06 8 19l-1.94-4.94L1 12.13l4.95-1.94L8 5l1.94 4.95L15 12l-5.06 2.06zM18 4l.94 2.06L21 7l-2.06.94L18 10l-.94-2.06L15 7l2.06-.94L18 4z"/></svg>;
+}
+function IcoCalendar() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>;
+}
+function IcoGamepad() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>;
+}
+function IcoUser() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+}
+function IcoEye() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>;
+}
+function IcoPen() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>;
+}
+function IcoTimer() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden><line x1="10" y1="2" x2="14" y2="2"/><line x1="12" y1="14" x2="15" y2="11"/><circle cx="12" cy="14" r="8"/></svg>;
+}
+function IcoMap() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>;
+}
+function IcoActivity() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>;
+}
+function IcoArrowRight() {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>;
+}
+function IcoShield() {
+  return <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>;
+}
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning.";
+  if (h < 17) return "Good afternoon.";
+  return "Good evening.";
+}
+
+// ─── Main export ─────────────────────────────────────────────
 export default function Home() {
   const [isReturning, setIsReturning] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -18,319 +60,224 @@ export default function Home() {
   }, []);
 
   if (!mounted) return null;
-
   return isReturning ? <ReturningHome /> : <FirstVisitHome />;
 }
 
-// ─────────────────────────────────────
-// FIRST VISIT
-// ─────────────────────────────────────
+// ─── FIRST VISIT ──────────────────────────────────────────────
 function FirstVisitHome() {
-  const markVisited = () => localStorage.setItem("nunchi_visited", "true");
+  const mark = () => localStorage.setItem("nunchi_visited", "true");
 
   return (
-    <main
-      className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden px-6"
-      style={{ background: "var(--bg-primary)" }}>
-      {/* MagicRings — full screen background */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <MagicRings
-          color="#70AEFF"
-          colorTwo="#075FAB"
-          ringCount={5}
-          speed={0.8}
-          attenuation={25}
-          lineThickness={1}
-          baseRadius={0.35}
-          radiusStep={0.1}
-          scaleRate={0.1}
-          opacity={1}
-          blur={0}
-          noiseAmount={0}
-          rotation={0}
-          ringGap={1.7}
-          fadeIn={0.7}
-          fadeOut={0.5}
-          followMouse={false}
-          mouseInfluence={0.2}
-          hoverScale={1.2}
-          parallax={0.05}
-          clickBurst={false}
-        />
+    <div style={{
+      position: "relative", minHeight: "100vh",
+      display: "grid", placeItems: "center",
+      padding: 24, background: "var(--bg)",
+    }}>
+      {/* Ambient rings */}
+      <div style={{
+        position: "fixed", inset: 0, pointerEvents: "none", overflow: "hidden", zIndex: 0,
+      }}>
+        {[0,1,2,3,4].map(i => (
+          <div key={i} style={{
+            position: "absolute", left: "50%", top: "50%",
+            width: `${240 + i * 120}px`, height: `${240 + i * 120}px`,
+            borderRadius: "50%",
+            transform: "translate(-50%, -50%)",
+            border: "1px solid rgba(90,112,243,0.08)",
+            animation: `ringPulse${i} ${14 + i * 3}s ease-in-out infinite`,
+            opacity: 0.18 - i * 0.025,
+          }}/>
+        ))}
       </div>
 
-      {/* Ambient — tidak bergerak, tidak menuntut */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div
-          className="absolute rounded-full animate-pulse-slow"
-          style={{
-            width: 600,
-            height: 600,
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -60%)",
-            background:
-              "radial-gradient(circle, rgba(90,112,243,0.07) 0%, transparent 70%)",
-          }}
-        />
-        <div
-          className="absolute rounded-full animate-pulse-slow"
-          style={{
-            width: 400,
-            height: 400,
-            bottom: "-5%",
-            right: "-5%",
-            background:
-              "radial-gradient(circle, rgba(255,138,42,0.05) 0%, transparent 70%)",
-            animationDelay: "3s",
-          }}
-        />
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="relative z-10 p-14 flex flex-col items-center text-center"
-        style={{
-          width: "100%",
-          maxWidth: 520,
-          borderRadius: 40,
-          background: "rgba(255, 255, 255, 0.3)",
-          backdropFilter: "blur(32px) saturate(180%)",
-          WebkitBackdropFilter: "blur(32px) saturate(180%)",
-          border: "1px solid rgba(255, 255, 255, 0.6)",
-          boxShadow: "0 24px 64px rgba(0, 0, 0, 0.06), inset 0 2px 4px rgba(255, 255, 255, 0.8)"
-        }}
-      >
+      <div className="nch-glass nuri-pop" style={{
+        position: "relative", zIndex: 2,
+        maxWidth: 480, width: "100%",
+        padding: 48, borderRadius: 32,
+        textAlign: "center", boxShadow: "var(--sh-4)",
+      }}>
         {/* Wordmark */}
-        <div className="mb-12">
-          <h1
-            className="font-bold mb-1"
-            style={{
-              fontSize: 72,
-              lineHeight: 1,
-              color: "#5a70f3",
-            }}>
-            눈치
-          </h1>
-          <p
-            className="text-xs tracking-[0.25em] uppercase font-semibold"
-            style={{ color: "var(--text-secondary)" }}>
-            nunchi
-          </p>
+        <div style={{ marginBottom: 40 }}>
+          <div style={{
+            fontSize: 84, lineHeight: 1, fontWeight: 700,
+            color: "var(--accent)", letterSpacing: "-0.03em",
+            fontFamily: "var(--font-sans)", marginBottom: 8,
+          }}>눈치</div>
+          <div className="eyebrow" style={{ fontSize: 11 }}>NUNCHI · 16TH e-ICON</div>
         </div>
 
-        {/* Tagline */}
-        <p
-          className="text-lg font-medium mb-14 leading-relaxed"
-          style={{ color: "var(--text-secondary)" }}>
-          Feel what&apos;s not said.
+        <div className="nch-serif" style={{
+          fontSize: 26, lineHeight: 1.3,
+          color: "var(--ink-2)", marginBottom: 48, fontStyle: "italic",
+        }}>Feel what&apos;s not said.</div>
+
+        <p style={{ fontSize: 13, color: "var(--ink-3)", marginBottom: 32, lineHeight: 1.6, padding: "0 12px" }}>
+          A wellness companion that bridges Korean{" "}
+          <span style={{ color: "var(--accent)", fontWeight: 600 }}>nunchi</span> and Indonesian{" "}
+          <span style={{ color: "var(--warm)", fontWeight: 600 }}>curhat</span>.
+          Read what&apos;s not said. Share when you&apos;re ready.
         </p>
 
-        {/* Actions */}
-        <div className="flex flex-col gap-3 w-full">
-          <Link
-            href="/therapy"
-            onClick={markVisited}
-            className="w-full py-4 rounded-2xl text-white text-base font-semibold text-center transition-all duration-300 shadow-[0_8px_24px_rgba(90,112,243,0.25)] hover:shadow-[0_16px_32px_rgba(90,112,243,0.4)] hover:-translate-y-1 active:shadow-[0_4px_12px_rgba(90,112,243,0.5)] active:translate-y-[2px] active:scale-[0.98]"
-            style={{ backgroundColor: "#5a70f3" }}
-          >
-            Just feel it
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <Link href="/mood" onClick={mark} style={{
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            padding: "16px 24px", borderRadius: 16, fontSize: 15, fontWeight: 600,
+            background: "var(--accent)", color: "var(--on-accent)",
+            boxShadow: "var(--sh-accent)", transition: "var(--t-fast)",
+          }}>
+            Just feel it <IcoArrowRight />
           </Link>
-          <Link
-            href="/about"
-            onClick={markVisited}
-            className="w-full py-4 rounded-2xl text-sm font-semibold text-center transition-all duration-300 border border-white/80 shadow-[0_4px_16px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:bg-white active:shadow-[0_2px_8px_rgba(0,0,0,0.06)] active:translate-y-[2px] active:scale-[0.98]"
-            style={{ color: "var(--text-secondary)", backgroundColor: "rgba(255, 255, 255, 0.5)" }}
-          >
+          <Link href="/onboarding" onClick={mark} style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "14px 20px", borderRadius: 14, fontSize: 14, fontWeight: 600,
+            background: "var(--surface)", color: "var(--ink)",
+            border: "1px solid var(--border-strong)", transition: "var(--t-fast)",
+          }}>
             Show me how it works
           </Link>
         </div>
 
-        <p
-          className="mt-8 text-xs font-medium"
-          style={{ color: "var(--text-secondary)", opacity: 0.5 }}>
-          No account · No sign-up · Stays on your device
-        </p>
-      </motion.div>
-    </main>
+        <div style={{
+          marginTop: 32, paddingTop: 20,
+          borderTop: "1px solid var(--border)",
+          fontSize: 11, color: "var(--ink-3)",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+        }}>
+          <IcoShield /> No account · No sign-up · Stays on your device
+        </div>
+      </div>
+
+      <style>{`
+        ${[0,1,2,3,4].map(i => `
+          @keyframes ringPulse${i} {
+            0%,100% { transform: translate(-50%,-50%) scale(0.95); opacity: ${0.16 - i*0.02}; }
+            50% { transform: translate(-50%,-50%) scale(1.08); opacity: ${0.30 - i*0.03}; }
+          }
+        `).join("")}
+      `}</style>
+    </div>
   );
 }
 
-// ─────────────────────────────────────
-// RETURNING USER
-// ─────────────────────────────────────
-
-const QUICK_ACTIONS = [
-  { href: "/mood", icon: Sun, label: "Check-in", sub: "How are you today?" },
-  { href: "/therapy", icon: Gamepad2, label: "Therapy", sub: "Soundscape & game" },
-  { href: "/chat", icon: Moon, label: "Nuri", sub: "Talk it out" },
-  { href: "/planner", icon: CalendarDays, label: "Planner", sub: "Study with wellness" },
-  { href: "/study", icon: Timer, label: "Study", sub: "Pomodoro & focus" },
-  { href: "/breaks", icon: Eye, label: "Breaks", sub: "Eyes, stretch, posture" },
-  { href: "/vent", icon: PenLine, label: "Vent", sub: "Write it out privately" },
-  { href: "/denah", icon: Map, label: "Denah", sub: "School floor plan", teacherOnly: true },
-  { href: "/profile", icon: UserCircle2, label: "Profile", sub: "Your nunchi report" },
+// ─── RETURNING USER ───────────────────────────────────────────
+const CARDS = [
+  { href: "/mood",      Icon: IcoSun,      label: "Check-in",   sub: "How are you carrying today?",  primary: true },
+  { href: "/chat",      Icon: IcoSparkles, label: "Nuri",       sub: "Talk it out" },
+  { href: "/therapy",   Icon: IcoGamepad,  label: "Therapy",    sub: "Soundscape & game" },
+  { href: "/planner",   Icon: IcoCalendar, label: "Planner",    sub: "Study with wellness" },
+  { href: "/study",     Icon: IcoTimer,    label: "Study",      sub: "Pomodoro & focus" },
+  { href: "/breaks",    Icon: IcoEye,      label: "Breaks",     sub: "Eyes, stretch, posture" },
+  { href: "/vent",      Icon: IcoPen,      label: "Vent",       sub: "Write it out privately" },
+  { href: "/profile",   Icon: IcoUser,     label: "Profile",    sub: "Your nunchi report" },
+  { href: "/dashboard", Icon: IcoActivity, label: "Insight",    sub: "7-day balance" },
+  { href: "/denah",     Icon: IcoMap,      label: "Floor plan", sub: "School mood map", teacherOnly: true },
 ];
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
-  },
-};
-
-const itemVariants = {
-  hidden: { y: 20, opacity: 0, scale: 0.95 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    scale: 1,
-    transition: { type: "spring", stiffness: 200, damping: 20 },
-  },
-};
 
 function ReturningHome() {
   const { data: session } = useSession();
   const role = (session?.user as any)?.role;
-  const [greeting, setGreeting] = useState("Welcome back.");
+  const [greet, setGreet] = useState("Welcome back.");
 
   useEffect(() => {
-    const h = new Date().getHours();
-    if (h < 12) setGreeting("Good morning.");
-    else if (h < 17) setGreeting("Good afternoon.");
-    else setGreeting("Good evening.");
+    setGreet(getGreeting());
   }, []);
 
+  const primary = CARDS[0];
+  const grid = CARDS.slice(1).filter(c => !c.teacherOnly || role === "TEACHER");
+
   return (
-    <main
-      className="min-h-screen flex flex-col px-6 pt-20 pb-8 relative overflow-hidden items-center"
-      style={{ background: "var(--bg-primary)" }}>
-
-      <div className="relative z-10 max-w-lg w-full">
-        {/* Greeting */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="mb-12"
-        >
-          <p
-            className="text-[40px] leading-tight font-bold tracking-tight text-[#1e293b]">
-            {greeting}
-          </p>
-          <p
-            className="text-lg mt-2 font-medium flex items-center gap-2"
-            style={{ color: "var(--text-secondary)" }}>
-            <Sparkles size={18} className="text-[#5a70f3]" /> Nuri is here.
-          </p>
-        </motion.div>
-
-        {/* Quick actions Grid */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="flex flex-col gap-4"
-        >
-          {/* Primary Action - Check in */}
-          <motion.div variants={itemVariants} className="w-full">
-            <Link
-              href="/mood"
-              className="group relative w-full flex items-center justify-between p-6 rounded-[32px] text-white transition-all duration-500 hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
-              style={{
-                backgroundColor: "#5a70f3",
-                boxShadow: "0 16px 32px rgba(90,112,243,0.2), inset 0 1px 1px rgba(255,255,255,0.2)",
-              }}>
-              <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 blur-[60px] rounded-full translate-x-1/2 -translate-y-1/2 transition-transform duration-700 group-hover:scale-150"></div>
-
-              <div className="relative z-10">
-                <p className="font-bold text-xl tracking-tight mb-1">Morning check-in</p>
-                <p className="text-sm font-medium opacity-80">
-                  60 seconds · How are you carrying today?
-                </p>
-              </div>
-              <div className="relative z-10 w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-lg">
-                <Sun size={28} className="text-white" />
-              </div>
-            </Link>
-          </motion.div>
-
-          {/* Secondary Actions Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            {QUICK_ACTIONS.slice(1)
-              .filter((a) => !(a as any).teacherOnly || role === "TEACHER")
-              .map((action) => {
-              const Icon = action.icon;
-              return (
-                <motion.div variants={itemVariants} key={action.href}>
-                  <Link
-                    href={action.href}
-                    className="group relative flex flex-col gap-4 p-5 rounded-[28px] border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl active:scale-95 bg-white/40 backdrop-blur-xl"
-                    style={{
-                      borderColor: "rgba(255,255,255,0.6)",
-                      boxShadow: "0 8px 32px rgba(0,0,0,0.04), inset 0 1px 2px rgba(255,255,255,0.8)",
-                    }}>
-                    <div className="w-12 h-12 rounded-[16px] flex items-center justify-center transition-colors duration-300 group-hover:bg-[#5a70f3] bg-white border border-gray-100 shadow-sm group-hover:border-transparent">
-                      <Icon size={24} className="text-[#5a70f3] group-hover:text-white transition-colors duration-300" />
-                    </div>
-                    <div>
-                      <p
-                        className="text-base font-bold tracking-tight"
-                        style={{ color: "var(--text-primary)" }}>
-                        {action.label}
-                      </p>
-                      <p
-                        className="text-xs font-medium mt-1"
-                        style={{ color: "var(--text-secondary)", opacity: 0.7 }}>
-                        {action.sub}
-                      </p>
-                    </div>
-                  </Link>
-                </motion.div>
-              );
-            })}
-          </div>
-        </motion.div>
-
-        {/* Reset — tersembunyi, tidak mengganggu */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 1 }}
-          className="w-full flex justify-center mt-12"
-        >
-          <motion.button
-            initial={{ borderWidth: 1 }}
-            whileHover={{
-              scale: 1.05,
-              opacity: 1,
-              backgroundColor: "rgba(90, 112, 243, 0.05)",
-              borderColor: "#5a70f3",
-              color: "#5a70f3",
-              borderWidth: 2
-            }}
-            whileTap={{
-              scale: 0.92,
-              backgroundColor: "rgba(90, 112, 243, 0.15)",
-              color: "#5a70f3",
-              borderColor: "#5a70f3",
-              borderWidth: 2,
-              boxShadow: "0 0 20px rgba(90, 112, 243, 0.4)"
-            }}
-            onClick={() => {
-              localStorage.removeItem("nunchi_visited");
-              window.location.reload();
-            }}
-            className="px-5 py-2.5 rounded-full text-xs font-semibold border transition-all duration-300"
-            style={{ color: "var(--text-secondary)", opacity: 0.5, borderColor: "var(--border)" }}>
-            Reset experience
-          </motion.button>
-        </motion.div>
+    <div style={{ minHeight: "100vh", padding: "32px 20px 80px", maxWidth: 1100, margin: "0 auto" }}>
+      <div style={{ marginBottom: 32 }}>
+        <div className="eyebrow" style={{ marginBottom: 4 }}>Welcome back</div>
+        <h1 style={{
+          fontSize: "clamp(32px, 4vw, 44px)", fontWeight: 700,
+          letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: 8,
+        }}>{greet}</h1>
+        <p style={{ fontSize: 15, color: "var(--ink-3)", display: "flex", alignItems: "center", gap: 6 }}>
+          <IcoSparkles /> Nuri is here.
+        </p>
       </div>
-    </main>
+
+      {/* Primary card */}
+      <Link href={primary.href} style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16,
+        padding: "28px 24px", borderRadius: 24, marginBottom: 16,
+        background: "linear-gradient(135deg, var(--accent), var(--accent-ink))",
+        color: "white", boxShadow: "var(--sh-accent)",
+        position: "relative", overflow: "hidden",
+        textDecoration: "none",
+      }}>
+        <div style={{
+          position: "absolute", top: -60, right: -40,
+          width: 200, height: 200, borderRadius: "50%",
+          background: "rgba(255,255,255,0.10)",
+        }}/>
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>{primary.label}</div>
+          <div style={{ fontSize: 13, opacity: 0.85 }}>60 seconds · {primary.sub}</div>
+        </div>
+        <div style={{
+          width: 56, height: 56, borderRadius: 16, flexShrink: 0,
+          background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.3)",
+          display: "grid", placeItems: "center", position: "relative", zIndex: 1,
+        }}>
+          <primary.Icon />
+        </div>
+      </Link>
+
+      {/* Grid */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+        gap: 12,
+      }}>
+        {grid.map(c => (
+          <Link key={c.href} href={c.href} className="nch-card card-hover" style={{
+            padding: 18, textAlign: "left",
+            display: "flex", flexDirection: "column", gap: 10,
+            textDecoration: "none",
+          }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 12,
+              background: "var(--accent-soft)", color: "var(--accent)",
+              display: "grid", placeItems: "center",
+            }}>
+              <c.Icon />
+            </div>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>{c.label}</div>
+              <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 2 }}>{c.sub}</div>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Stats footer */}
+      <div className="nch-card-soft" style={{
+        marginTop: 32, padding: 20,
+        display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 16,
+      }}>
+        {[
+          { k: "3",  v: "day streak",     color: "var(--accent)" },
+          { k: "72", v: "wellness score", color: "var(--warm)" },
+          { k: "6",  v: "curhat saved",   color: "var(--ink)" },
+          { k: "14", v: "breaks taken",   color: "var(--ink)" },
+        ].map(s => (
+          <div key={s.v}>
+            <div className="nch-mono" style={{ fontSize: 26, fontWeight: 700, color: s.color, letterSpacing: "-0.02em" }}>{s.k}</div>
+            <div style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 2 }}>{s.v}</div>
+          </div>
+        ))}
+      </div>
+
+      <button onClick={() => { localStorage.removeItem("nunchi_visited"); window.location.reload(); }}
+        style={{
+          marginTop: 24, display: "block", margin: "24px auto 0",
+          fontSize: 11, color: "var(--ink-3)", padding: "6px 14px",
+          borderRadius: 999, border: "1px solid var(--border)",
+        }}>
+        Reset experience
+      </button>
+    </div>
   );
 }
